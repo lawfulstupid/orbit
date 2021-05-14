@@ -1,0 +1,17 @@
+body {
+	background-color: black;
+	overflow: hidden;
+}
+
+.sphere {
+	position: absolute;
+	border-radius: 50%;
+	z-index: 1;
+	cursor: pointer;
+}
+
+.trail {
+	position: absolute;
+	border-radius: 50%;
+	z-index: 0;
+}
