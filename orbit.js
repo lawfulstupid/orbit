@@ -148,7 +148,7 @@ function setFocus(sphere) {
 		env.playback.autofocus = true;
 	} else if (!sphere) {
 		env.playback.focus = null;
-	} else {
+	} else if (sphere !== "manual") {
 		env.playback.focus = getSphere(sphere).name;
 	}
 	updateButtons();
@@ -663,12 +663,8 @@ function step() {
 }
 
 function checkFocus() {
-	let target = getAutoFocusTarget();
-	if (env.playback.autofocus) {
-		env.playback.focus = target;
-	} else if (env.playback.focus === target) {
-		setFocus("auto"); // already effectively auto
-	}
+	if (!env.playback.autofocus) return;
+	env.playback.focus = getAutoFocusTarget();
 }
 
 function getAutoFocusTarget() {
