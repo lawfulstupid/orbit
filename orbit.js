@@ -1,6 +1,6 @@
 
 function init() {
-	init1();
+	init5();
 }
 
 function init0() { // sun only
@@ -78,9 +78,9 @@ function init5() { // dust cloud
 	const numberOfPlanets = 1000;
 	const minRadius = 2;
 	const maxRadius = 5;
-	const minOrbit = 0;
+	const minOrbit = 5;
 	const maxOrbit = 1000;
-	const maxSpeed = 5;
+	const maxSpeed = 8;
 	
 	for (let i = 1; i <= numberOfPlanets; i++) {
 		const color = new Color("gray");
@@ -103,7 +103,7 @@ function init5() { // dust cloud
 		new Sphere("planet" + i, radius, color.toString(), [x,y], [u,v]);
 	}
 	
-	// setFocus("auto");
+	setFocus("auto");
 	
 	// env.playback.paused = true;
 }
