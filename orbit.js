@@ -1,7 +1,6 @@
 
 function init() {
 	init5();
-	env.playback.paused = true;
 }
 
 function init0() { // sun only
