@@ -151,6 +151,7 @@ function setFocus(sphere) {
 	} else {
 		env.playback.focus = getSphere(sphere).name;
 	}
+	updateButtons();
 }
 
 function playPause() {
@@ -233,7 +234,7 @@ class Sphere extends Drawable {
 			if (env.playback.focus === this.name) {
 				playPause();
 			} else {
-				env.playback.focus = this.name;
+				setFocus(this);
 			}
 		};
 		
@@ -662,8 +663,15 @@ function step() {
 }
 
 function checkFocus() {
-	if (!env.playback.autofocus) return;
-	
+	let target = getAutoFocusTarget();
+	if (env.playback.autofocus) {
+		env.playback.focus = target;
+	} else if (env.playback.focus === target) {
+		setFocus("auto"); // already effectively auto
+	}
+}
+
+function getAutoFocusTarget() {
 	const bigSpheres = Object.values(env.model.spheres).reduce((acc, sphere) => {
 		if (acc.length === 0 || acc[0].radius < sphere.radius) {
 			return [sphere];
@@ -674,10 +682,8 @@ function checkFocus() {
 		}
 	}, []);
 	
-	if (!bigSpheres.find(sphere => sphere.name === env.playback.focus)) {
-		if (bigSpheres.length > 0) {
-			env.playback.focus = bigSpheres[0].name;
-		}
+	if (bigSpheres.length > 0) {
+		return bigSpheres[0].name;
 	}
 }
 
@@ -747,4 +753,6 @@ function updateButtons() {
 	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.min);
 	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.default);
 	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.max);
+	document.getElementById("autoFocusButton").style.display = env.playback.autofocus ? "none" : "";
+	document.getElementById("manualFocusButton").style.display = env.playback.autofocus ? "" : "none";
 }
