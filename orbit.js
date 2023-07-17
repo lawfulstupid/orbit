@@ -119,6 +119,12 @@ const constants = {
 			max: 64,
 			factor: 2
 		}
+	},
+	screen: {
+		scale: {
+			default: 1,
+			factor: 1.5
+		}
 	}
 }
 
@@ -136,7 +142,8 @@ const env = {
 		autofocus: false
 	},
 	screen: {
-		centre: [0, 0]
+		centre: [0, 0],
+		scale: constants.screen.scale.default // >1 => zoomed in1, <1 => zoomed out
 	}
 }
 
@@ -170,6 +177,16 @@ function alterSpeed(dir) {
 	updateButtons();
 }
 
+function alterZoom(dir) {
+	if (dir === 0) {
+		env.screen.scale = constants.screen.scale.default;0
+	} else {
+		env.screen.scale *= constants.screen.scale.factor ** dir;
+	}
+	forEachSphere(sphere => sphere.setElementRadius());
+	updateButtons();
+}
+
 
 /* OBJECTS */
 
@@ -180,7 +197,7 @@ class Drawable {
 	constructor() {}
 	
 	getCornerCoords() {
-		return this.position;
+		return vecMul(env.screen.scale, this.position);
 	}
 	
 	draw() {
@@ -224,9 +241,7 @@ class Sphere extends Drawable {
 		this.element.id = name;
 		this.element.setAttribute("class", "sphere");
 		
-		const diameter = (this.radius || 50) * 2;
-		this.element.style.width = diameter + "px";
-		this.element.style.height = diameter + "px";
+		this.setElementRadius();
 		this.element.style.zIndex = 10000 - Math.floor(this.radius);
 		this.element.style.backgroundColor = this.color.toString();
 		
@@ -241,6 +256,12 @@ class Sphere extends Drawable {
 		document.getElementById("canvas").appendChild(this.element);
 	}
 	
+	setElementRadius() {
+		const diameter = (this.radius || 50) * 2 * env.screen.scale;
+		this.element.style.width = diameter + "px";
+		this.element.style.height = diameter + "px";
+	}
+	
 	remove() {
 		delete env.model.spheres[this.name];
 		if (this.element) document.getElementById("canvas").removeChild(this.element);
@@ -251,7 +272,12 @@ class Sphere extends Drawable {
 	}
 	
 	getCornerCoords() {
-		return vecSub(this.position, [this.radius, this.radius]);
+		const radArr = vecMul(env.screen.scale, [this.radius, this.radius]);
+		return vecSub(super.getCornerCoords(), radArr);
+	}
+	
+	getScreenPosition() {
+		return super.getCornerCoords();
 	}
 	
 	getUltimateSuccessor() {
@@ -641,20 +667,6 @@ function getScreenCentre() {
 	return [window.innerWidth / 2, window.innerHeight / 2];
 }
 
-function getScreenCoordinates(sphere) {
-	let centre = getScreenCentre();
-	
-	if (env.playback.focus) {
-		const focus = getFocus();
-		centre = vecSub(centre, focus.position);
-	}
-	
-	let screenPos = sphere.position;
-	screenPos = vecSub(screenPos, [sphere.radius, sphere.radius]);
-	screenPos = vecAdd(screenPos, centre);
-	return screenPos;
-}
-
 function step() {
 	if (env.model.collision) checkCollisions();
 	updateAccelerations();
@@ -688,7 +700,7 @@ function draw() {
 	
 	if (env.playback.focus) {
 		const focus = getFocus();
-		centre = vecSub(centre, focus.position);
+		centre = vecSub(centre, focus.getScreenPosition());
 	}
 	
 	if (env.screen.centre !== centre) {
@@ -751,4 +763,5 @@ function updateButtons() {
 	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.max);
 	document.getElementById("autoFocusButton").style.display = env.playback.autofocus ? "none" : "";
 	document.getElementById("manualFocusButton").style.display = env.playback.autofocus ? "" : "none";
+	document.getElementById("resetZoomButton").setAttribute("disabled", env.screen.scale === constants.screen.scale.default);
 }
