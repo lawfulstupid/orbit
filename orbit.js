@@ -215,12 +215,12 @@ class Sphere extends Drawable {
 			}
 		};
 		
-		document.body.appendChild(this.element);
+		document.getElementById("canvas").appendChild(this.element);
 	}
 	
 	remove() {
 		delete env.model.spheres[this.name];
-		if (this.element) document.body.removeChild(this.element);
+		if (this.element) document.getElementById("canvas").removeChild(this.element);
 	}
 	
 	getMass() {
@@ -252,11 +252,11 @@ class TrailMarker extends Drawable {
 		this.element.style.width = "2px";
 		this.element.style.height = "2px";
 		this.element.style.backgroundColor = sphere.color;
-		document.body.appendChild(this.element);
+		document.getElementById("canvas").appendChild(this.element);
 		sphere.trail.push(this);
 		
 		while (sphere.trail.length > sphere.trailLength) {
-			document.body.removeChild(sphere.trail[0].element);
+			document.getElementById("canvas").removeChild(sphere.trail[0].element);
 			sphere.trail = sphere.trail.slice(1);
 		}
 		
