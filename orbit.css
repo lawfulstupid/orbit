@@ -36,3 +36,12 @@
 	margin-right: 8px;
 	cursor: pointer;
 }
+
+.control-panel > .separator {
+	display: inline-block;
+}
+
+.control-panel > i[disabled=true] {
+	color: grey;
+	cursor: default;
+}

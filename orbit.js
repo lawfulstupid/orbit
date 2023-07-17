@@ -37,7 +37,6 @@ function init3() {
 	const earth = new Sphere("earth", 20, "green", [1500, 0], [0, 50]);
 	const moon = new Sphere("moon", 5, "grey", [1460, 0], [0, 55]);
 	setFocus("sun");
-	env.playback.speed = 10;
 	env.playback.paused = true;
 	
 	earth.trailLength = 200;
@@ -112,6 +111,17 @@ function randomBetween(a, b) {
 	return a + Math.random() * (b - a);
 }
 
+const constants = {
+	playback: {
+		speed: {
+			default: 8,
+			min: 1,
+			max: 64,
+			factor: 2
+		}
+	}
+}
+
 const env = {
 	model: {
 		spheres: {},
@@ -120,7 +130,7 @@ const env = {
 	},
 	playback: {
 		time: 0,
-		speed: 8,
+		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
 		autofocus: false
@@ -145,6 +155,17 @@ function setFocus(sphere) {
 
 function playPause() {
 	env.playback.paused = !env.playback.paused;
+	updateButtons();
+}
+
+function alterSpeed(dir) {
+	if (dir === 0) {
+		env.playback.speed = constants.playback.speed.default;
+	} else {
+		env.playback.speed = env.playback.speed * (constants.playback.speed.factor ** dir);
+		env.playback.speed = Math.max(constants.playback.speed.min, env.playback.speed);
+		env.playback.speed = Math.min(constants.playback.speed.max, env.playback.speed);
+	}
 	updateButtons();
 }
 
@@ -723,4 +744,7 @@ function benchmark(fn) {
 function updateButtons() {
 	document.getElementById("pauseButton").style.display = env.playback.paused ? "none" : "";
 	document.getElementById("playButton").style.display = env.playback.paused ? "" : "none";
+	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.min);
+	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.default);
+	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.max);
 }
