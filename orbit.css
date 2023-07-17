@@ -12,11 +12,27 @@
 	position: absolute;
 	border-radius: 50%;
 	z-index: 1;
-	cursor: pointer;
 }
 
 .trail {
 	position: absolute;
 	border-radius: 50%;
 	z-index: 0;
+}
+
+.control-panel {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	color: white;
+	font-size: xx-large;
+	z-index: 10000;
+	padding-top: 5px;
+	padding-left: 8px;
+}
+
+.control-panel > * {
+	position: relative;
+	margin-right: 8px;
+	cursor: pointer;
 }

@@ -1,6 +1,7 @@
 
 function init() {
 	init5();
+	env.playback.paused = true;
 }
 
 function init0() { // sun only
@@ -145,7 +146,9 @@ function setFocus(sphere) {
 
 function playPause() {
 	env.playback.paused = !env.playback.paused;
+	updateButtons();
 }
+
 
 /* OBJECTS */
 
@@ -206,7 +209,6 @@ class Sphere extends Drawable {
 		this.element.style.zIndex = 10000 - Math.floor(this.radius);
 		this.element.style.backgroundColor = this.color.toString();
 		
-		this.element.style.cursor = "pointer";
 		this.element.onclick = () => {
 			if (env.playback.focus === this.name) {
 				playPause();
@@ -696,6 +698,7 @@ function main() {
 document.addEventListener("DOMContentLoaded", () => {
 	init();
 	draw();
+	updateButtons();
 	setInterval(main, 1);
 });
 
@@ -716,4 +719,9 @@ function benchmark(fn) {
 	var t = timer('Benchmark');
 	fn();
 	t.stop();
+}
+
+function updateButtons() {
+	document.getElementById("pauseButton").style.display = env.playback.paused ? "none" : "";
+	document.getElementById("playButton").style.display = env.playback.paused ? "" : "none";
 }
