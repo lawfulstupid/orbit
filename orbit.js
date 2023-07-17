@@ -163,7 +163,7 @@ function alterSpeed(dir) {
 	if (dir === 0) {
 		env.playback.speed = constants.playback.speed.default;
 	} else {
-		env.playback.speed = env.playback.speed * (constants.playback.speed.factor ** dir);
+		env.playback.speed *= constants.playback.speed.factor ** dir;
 		env.playback.speed = Math.max(constants.playback.speed.min, env.playback.speed);
 		env.playback.speed = Math.min(constants.playback.speed.max, env.playback.speed);
 	}
