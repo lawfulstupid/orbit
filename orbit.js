@@ -712,7 +712,6 @@ function main() {
 	checkFocus();
 	draw();
 	env.playback.time += 1;
-	// setTimeout(main, 1);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -744,6 +743,7 @@ function benchmark(fn) {
 function updateButtons() {
 	document.getElementById("pauseButton").style.display = env.playback.paused ? "none" : "";
 	document.getElementById("playButton").style.display = env.playback.paused ? "" : "none";
+	document.getElementById("stepButton").setAttribute("disabled", env.playback.paused === false);
 	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.min);
 	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.default);
 	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.max);

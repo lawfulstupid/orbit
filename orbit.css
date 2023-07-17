@@ -43,5 +43,5 @@
 
 .control-panel > i[disabled=true] {
 	color: grey;
-	cursor: default;
+	pointer-events: none;
 }
