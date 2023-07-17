@@ -30,12 +30,17 @@
 	padding-top: 5px;
 	padding-left: 8px;
 	user-select: none;
+	text-align: center;
 }
 
 .control-panel > * {
 	position: relative;
-	margin-right: 8px;
+	margin-right: 5px;
 	cursor: pointer;
+}
+
+.control-panel > i {
+	width: 32px;
 }
 
 .control-panel > .separator {
@@ -45,4 +50,9 @@
 .control-panel > i[disabled=true] {
 	color: grey;
 	pointer-events: none;
+}
+
+.control-panel > i[hidden=true] {
+	display: none;
+	margin: 0;
 }

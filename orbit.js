@@ -755,13 +755,13 @@ function benchmark(fn) {
 }
 
 function updateButtons() {
-	document.getElementById("pauseButton").style.display = env.playback.paused ? "none" : "";
-	document.getElementById("playButton").style.display = env.playback.paused ? "" : "none";
-	document.getElementById("stepButton").setAttribute("disabled", env.playback.paused === false);
+	document.getElementById("pauseButton").setAttribute("hidden", !env.playback.paused);
+	document.getElementById("playButton").setAttribute("hidden", env.playback.paused);
+	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused);
 	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.min);
 	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.default);
 	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.max);
-	document.getElementById("autoFocusButton").style.display = env.playback.autofocus ? "none" : "";
-	document.getElementById("manualFocusButton").style.display = env.playback.autofocus ? "" : "none";
+	document.getElementById("autoFocusButton").setAttribute("hidden", env.playback.autofocus);
+	document.getElementById("manualFocusButton").setAttribute("hidden", !env.playback.autofocus);
 	document.getElementById("resetZoomButton").setAttribute("disabled", env.screen.scale === constants.screen.scale.default);
 }
