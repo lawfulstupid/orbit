@@ -1,3 +1,7 @@
+body {
+	font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
 #canvas {
 	background-color: black;
 	overflow: hidden;
@@ -43,10 +47,6 @@
 	width: 32px;
 }
 
-.control-panel > .separator {
-	display: inline-block;
-}
-
 .control-panel > i[disabled=true] {
 	color: grey;
 	pointer-events: none;
@@ -55,4 +55,13 @@
 .control-panel > i[hidden=true] {
 	display: none;
 	margin: 0;
+}
+
+.control-panel > span {
+	display: inline-block;
+}
+
+.control-panel > span.number {
+	min-width: 2ch;
+	pointer-events: none;
 }

@@ -192,6 +192,12 @@ function setCollisions(bool) {
 	updateButtons();
 }
 
+function alterTrailLength(diff) {
+	env.model.trailLength += diff;
+	env.model.trailLength = Math.max(0, env.model.trailLength);
+	updateButtons();
+}
+
 
 /* OBJECTS */
 
@@ -787,4 +793,6 @@ function updateButtons() {
 	document.getElementById("resetZoomButton").setAttribute("disabled", env.screen.scale === constants.screen.scale.default);
 	document.getElementById("enableCollisionsButton").setAttribute("hidden", env.model.collision);
 	document.getElementById("disableCollisionsButton").setAttribute("hidden", !env.model.collision);
+	document.getElementById("decreaseTrailButton").setAttribute("disabled", env.model.trailLength === 0);
+	document.getElementById("trailLength").innerHTML = env.model.trailLength;
 }
