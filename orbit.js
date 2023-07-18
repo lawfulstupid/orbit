@@ -665,7 +665,7 @@ function combine(a, b) {
 	const u = weightedAverage(a.velocity[0], b.velocity[0], a.getMass(), b.getMass());
 	const v = weightedAverage(a.velocity[1], b.velocity[1], a.getMass(), b.getMass());
 	const radius = Math.cbrt(a.getMass() + b.getMass()); // grow by volume
-	const name = hashCode(a.name + "+" + b.name);
+	const name = hashCode();
 	
 	a.remove();
 	b.remove();
@@ -681,11 +681,8 @@ function combine(a, b) {
 	return newSphere;
 }
 
-function hashCode(s) {
-	return s.split('').reduce((a,b) => {
-		a = ((a<<5) - a) + b.charCodeAt(0);
-		return a & a
-	}, 0);
+function hashCode() {
+	return crypto.randomUUID();
 }
 
 
