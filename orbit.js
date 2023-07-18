@@ -204,6 +204,7 @@ function alterTrailLength(diff) {
 class Drawable {
 	position;
 	element;
+	elementRegistered = false;
 	
 	constructor() {}
 	
@@ -211,15 +212,29 @@ class Drawable {
 		return vecMul(env.screen.scale, this.position);
 	}
 	
+	getScreenPosition() {
+		return vecAdd(env.screen.centre, this.getCornerCoords());
+	}
+	
+	registerInDOM() {
+		if (this.element && !this.elementRegistered) {
+			document.getElementById("canvas").appendChild(this.element);
+			this.elementRegistered = true;			
+		}
+	}
+	
 	draw() {
-		// draw on creation
-		const [left, top] = vecAdd(env.screen.centre, this.getCornerCoords());
+		this.registerInDOM();
+		const [left, top] = this.getScreenPosition();
 		this.element.style.left = left + "px";
 		this.element.style.top = top + "px";
 	}
 	
-	remove() {
-		if (this.element) document.getElementById("canvas").removeChild(this.element);
+	deregister() {
+		if (this.element && this.elementRegistered) {
+			document.getElementById("canvas").removeChild(this.element);
+			this.elementRegistered = false;
+		}
 	}
 	
 }
@@ -229,13 +244,11 @@ class Sphere extends Drawable {
 	radius;
 	color;
 	
-	position;
 	velocity;
 	acceleration = [0, 0];
 	
 	trail = [];
 	
-	element;
 	successor = undefined;
 	
 	constructor(name, radius, color, position, velocity) {
@@ -249,9 +262,7 @@ class Sphere extends Drawable {
 		this.velocity = velocity || [0, 0];
 		
 		env.model.spheres[this.name] = this;
-	}
-	
-	registerInDOM() {
+		
 		this.element = document.createElement("div");
 		this.element.id = name;
 		this.element.setAttribute("class", "sphere");
@@ -267,18 +278,20 @@ class Sphere extends Drawable {
 				setFocus(this);
 			}
 		};
-		
-		document.getElementById("canvas").appendChild(this.element);
 	}
 	
 	setElementRadius() {
-		const diameter = (this.radius || 50) * 2 * env.screen.scale;
+		const diameter = this.getElementDiameter();
 		this.element.style.width = diameter + "px";
 		this.element.style.height = diameter + "px";
 	}
 	
+	getElementDiameter() {
+		return (this.radius || 50) * 2 * env.screen.scale;
+	}
+	
 	remove() {
-		super.remove();
+		super.deregister();
 		delete env.model.spheres[this.name];
 	}
 	
@@ -291,7 +304,7 @@ class Sphere extends Drawable {
 		return vecSub(super.getCornerCoords(), radArr);
 	}
 	
-	getScreenPosition() {
+	getCentre() {
 		return super.getCornerCoords();
 	}
 	
@@ -303,13 +316,25 @@ class Sphere extends Drawable {
 		}
 	}
 	
+	registerInDOM() {
+		const [left,top] = this.getScreenPosition();
+		const diameter = this.getElementDiameter();
+		const doDraw = 0 <= left + diameter && left <= window.innerWidth
+			&& 0 <= top + diameter && top <= window.innerHeight;
+		if (doDraw) {
+			super.registerInDOM();
+		} else {
+			super.deregister();
+		}
+	}
+	
 	draw() {
 		super.draw();
 		
-		// Draw trail
+		// Draw/update trail
 		this.trail = this.trail.filter(marker => {
 			if (marker.birthStep < env.playback.step - env.model.trailLength) {
-				marker.remove();
+				marker.deregister();
 				return false;
 			} else {
 				marker.draw();
@@ -722,7 +747,7 @@ function draw() {
 	
 	if (env.playback.focus) {
 		const focus = getFocus();
-		centre = vecSub(centre, focus.getScreenPosition());
+		centre = vecSub(centre, focus.getCentre());
 	}
 	
 	if (env.screen.centre !== centre) {
@@ -730,7 +755,6 @@ function draw() {
 	}
 	
 	forEachSphere(sphere => {
-		if (!sphere.element) sphere.registerInDOM();
 		sphere.draw();
 	});
 }
