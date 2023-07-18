@@ -755,8 +755,8 @@ function benchmark(fn) {
 }
 
 function updateButtons() {
-	document.getElementById("pauseButton").setAttribute("hidden", !env.playback.paused);
-	document.getElementById("playButton").setAttribute("hidden", env.playback.paused);
+	document.getElementById("pauseButton").setAttribute("hidden", env.playback.paused);
+	document.getElementById("playButton").setAttribute("hidden", !env.playback.paused);
 	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused);
 	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.min);
 	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.default);
