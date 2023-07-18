@@ -221,6 +221,7 @@ class Drawable {
 	remove() {
 		if (this.element) document.getElementById("canvas").removeChild(this.element);
 	}
+	
 }
 
 class Sphere extends Drawable {
@@ -713,19 +714,7 @@ function checkFocus() {
 }
 
 function getAutoFocusTarget() {
-	const bigSpheres = Object.values(env.model.spheres).reduce((acc, sphere) => {
-		if (acc.length === 0 || acc[0].radius < sphere.radius) {
-			return [sphere];
-		} else if (acc[0].radius === sphere.radius) {
-			return acc.concat([sphere]);
-		} else {
-			return acc;
-		}
-	}, []);
-	
-	if (bigSpheres.length > 0) {
-		return bigSpheres[0].name;
-	}
+	return Object.values(env.model.spheres).sort((a,b) => b.radius - a.radius).at(0)?.name || null;
 }
 
 function draw() {
