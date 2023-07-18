@@ -38,8 +38,6 @@ function init3() {
 	const moon = new Sphere("moon", 5, "grey", [1460, 0], [0, 55]);
 	setFocus("sun");
 	env.playback.paused = true;
-	
-	earth.trailLength = 200;
 }
 
 function init4() {
@@ -132,10 +130,12 @@ const env = {
 	model: {
 		spheres: {},
 		gravity: 0.1, // gravitational constant
-		collision: true
+		collision: true,
+		trailLength: 0
 	},
 	playback: {
 		time: 0,
+		step: 0,
 		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
@@ -211,6 +211,10 @@ class Drawable {
 		this.element.style.left = left + "px";
 		this.element.style.top = top + "px";
 	}
+	
+	remove() {
+		if (this.element) document.getElementById("canvas").removeChild(this.element);
+	}
 }
 
 class Sphere extends Drawable {
@@ -223,7 +227,6 @@ class Sphere extends Drawable {
 	acceleration = [0, 0];
 	
 	trail = [];
-	trailLength = 0;
 	
 	element;
 	successor = undefined;
@@ -268,8 +271,8 @@ class Sphere extends Drawable {
 	}
 	
 	remove() {
+		super.remove();
 		delete env.model.spheres[this.name];
-		if (this.element) document.getElementById("canvas").removeChild(this.element);
 	}
 	
 	getMass() {
@@ -293,10 +296,27 @@ class Sphere extends Drawable {
 		}
 	}
 	
+	draw() {
+		super.draw();
+		
+		// Draw trail
+		this.trail = this.trail.filter(marker => {
+			if (marker.birthStep < env.playback.step - env.model.trailLength) {
+				marker.remove();
+				return false;
+			} else {
+				marker.draw();
+				return true;
+			}
+		});
+	}
+	
 }
 
 class TrailMarker extends Drawable {
-	constructor(sphere, centre) {
+	birthStep = env.playback.step;
+	
+	constructor(sphere) {
 		super();
 		
 		this.position = sphere.position;
@@ -308,14 +328,8 @@ class TrailMarker extends Drawable {
 		this.element.style.backgroundColor = sphere.color;
 		document.getElementById("canvas").appendChild(this.element);
 		sphere.trail.push(this);
-		
-		while (sphere.trail.length > sphere.trailLength) {
-			document.getElementById("canvas").removeChild(sphere.trail[0].element);
-			sphere.trail = sphere.trail.slice(1);
-		}
-		
-		this.draw();
 	}
+	
 }
 
 function getSphere(sphere) {
@@ -613,6 +627,14 @@ function updatePositions() {
 	});
 }
 
+function updateTrails() {
+	if (env.model.trailLength) {
+		forEachSphere(sphere => {
+			new TrailMarker(sphere);
+		});
+	}
+}
+
 function checkCollisions() {
 	const currentSpheres = Object.values(env.model.spheres);
 	
@@ -650,6 +672,7 @@ function combine(a, b) {
 	const newSphere = new Sphere(name, radius, color, [x,y], [u,v]);
 	a.successor = newSphere;
 	b.successor = newSphere;
+	newSphere.trail = [...a.trail, ...b.trail]; // combine trails
 	
 	if (env.playback.focus === a.name || env.playback.focus === b.name) {
 		env.playback.focus = name;
@@ -677,6 +700,8 @@ function step() {
 	updateAccelerations();
 	updateVelocities();
 	updatePositions();
+	updateTrails();
+	env.playback.step += 1;
 }
 
 function checkFocus() {
@@ -710,17 +735,11 @@ function draw() {
 	
 	if (env.screen.centre !== centre) {
 		env.screen.centre = centre;
-		forEachSphere(sphere => {
-			sphere.trail.forEach(marker => {
-				marker.draw();
-			})
-		});
 	}
 	
 	forEachSphere(sphere => {
 		if (!sphere.element) sphere.registerInDOM();
 		sphere.draw();
-		if (sphere.trailLength) new TrailMarker(sphere, centre);
 	});
 }
 
