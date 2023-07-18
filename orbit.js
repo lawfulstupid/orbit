@@ -625,9 +625,12 @@ function updateAccelerations() {
 		sphere.acceleration = [0,0];
 	});
 	
-	for (var subject of Object.values(env.model.spheres)) {
-		for (var object of Object.values(env.model.spheres)) {
-			if (subject.name <= object.name) continue;
+	const list = Object.values(env.model.spheres);
+	
+	for (let subjectIdx = 0; subjectIdx < list.length - 1; subjectIdx++) {
+		const subject = list[subjectIdx];
+		for (let objectIdx = subjectIdx + 1; objectIdx < list.length; objectIdx++) {
+			const object = list[objectIdx];
 			
 			const dir = vecSub(object.position, subject.position);
 			const baseVec = vecMul(env.model.gravity / (norm(dir) ** 3), dir);
@@ -641,30 +644,12 @@ function updateAccelerations() {
 	}
 }
 
-function updateVelocities() {
-	forEachSphere(sphere => {
-		const vel = sphere.velocity;
-		const acc = sphere.acceleration;
-		const new_vel = vecAdd(vel, acc);
-		sphere.velocity = new_vel;
-	});
-}
-
 function updatePositions() {
 	forEachSphere(sphere => {
-		const pos = sphere.position;
-		const vel = sphere.velocity;
-		const new_pos = vecAdd(pos, vel);
-		sphere.position = new_pos;
+		sphere.velocity = vecAdd(sphere.velocity, sphere.acceleration);
+		sphere.position = vecAdd(sphere.position, sphere.velocity);
+		if (env.model.trailLength) new TrailMarker(sphere);
 	});
-}
-
-function updateTrails() {
-	if (env.model.trailLength) {
-		forEachSphere(sphere => {
-			new TrailMarker(sphere);
-		});
-	}
 }
 
 function checkCollisions() {
@@ -727,9 +712,7 @@ function getScreenCentre() {
 function step() {
 	if (env.model.collision) checkCollisions();
 	updateAccelerations();
-	updateVelocities();
 	updatePositions();
-	updateTrails();
 	env.playback.step += 1;
 }
 
