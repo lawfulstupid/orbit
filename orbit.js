@@ -79,7 +79,7 @@ function init5() { // dust cloud
 	const maxRadius = 5;
 	const minOrbit = 5;
 	const maxOrbit = 1000;
-	const maxSpeed = 8;
+	const maxSpeed = 5;
 	
 	for (let i = 1; i <= numberOfPlanets; i++) {
 		const color = new Color("gray");
@@ -92,12 +92,12 @@ function init5() { // dust cloud
 		const y = orbit * Math.sin(posAngle);
 		
 		// Random direction velocity
-		// const velAngle = randomBetween(0, 360);
-		// const u = speed * Math.cos(velAngle);
-		// const v = speed * Math.sin(velAngle);
+		const velAngle = randomBetween(0, 360);
+		const u = speed * Math.cos(velAngle);
+		const v = speed * Math.sin(velAngle);
 		
 		// Clockwise velocity
-		const [u,v] = vecMul(speed, unit([-y, x]));
+		// const [u,v] = vecMul(speed, unit([-y, x]));
 		
 		new Sphere("planet" + i, radius, color.toString(), [x,y], [u,v]);
 	}
@@ -637,7 +637,7 @@ function combine(a, b) {
 	const y = weightedAverage(a.position[1], b.position[1], a.getMass(), b.getMass());
 	const u = weightedAverage(a.velocity[0], b.velocity[0], a.getMass(), b.getMass());
 	const v = weightedAverage(a.velocity[1], b.velocity[1], a.getMass(), b.getMass());
-	const radius = Math.sqrt(a.radius * a.radius + b.radius * b.radius); // grow by area
+	const radius = Math.cbrt(a.getMass() + b.getMass()); // grow by volume
 	const name = hashCode(a.name + "+" + b.name);
 	
 	a.remove();
