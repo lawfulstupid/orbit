@@ -183,7 +183,7 @@ function alterZoom(dir) {
 	} else {
 		env.screen.scale *= constants.screen.scale.factor ** dir;
 	}
-	forEachSphere(sphere => sphere.setElementRadius());
+	forEachSphere(sphere => sphere.setElementSize());
 	updateButtons();
 }
 
@@ -206,14 +206,30 @@ class Drawable {
 	element;
 	elementRegistered = false;
 	
-	constructor() {}
-	
 	getCornerCoords() {
 		return vecMul(env.screen.scale, this.position);
 	}
 	
 	getScreenPosition() {
 		return vecAdd(env.screen.centre, this.getCornerCoords());
+	}
+	
+	getElementWidth() {
+		return 0;
+	}
+	
+	getElementHeight() {
+		return 0;
+	}
+	
+	getBoundingRect() {
+		const [left, top] = this.getScreenPosition();
+		return {
+			left: left,
+			right: left + this.getElementWidth(),
+			top: top,
+			bottom: top + this.getElementHeight()
+		};
 	}
 	
 	registerInDOM() {
@@ -224,10 +240,18 @@ class Drawable {
 	}
 	
 	draw() {
-		this.registerInDOM();
-		const [left, top] = this.getScreenPosition();
-		this.element.style.left = left + "px";
-		this.element.style.top = top + "px";
+		const bounds = this.getBoundingRect();
+		const doDraw = 0 <= bounds.right && bounds.left <= window.innerWidth
+			&& 0 <= bounds.bottom && bounds.top <= window.innerHeight;
+		
+		if (doDraw) {
+			this.registerInDOM();
+		} else {
+			this.deregister();
+		}
+		
+		this.element.style.left = bounds.left + "px";
+		this.element.style.top = bounds.top + "px";
 	}
 	
 	deregister() {
@@ -267,7 +291,7 @@ class Sphere extends Drawable {
 		this.element.id = name;
 		this.element.setAttribute("class", "sphere");
 		
-		this.setElementRadius();
+		this.setElementSize();
 		this.element.style.zIndex = 10000 - Math.floor(this.radius);
 		this.element.style.backgroundColor = this.color.toString();
 		
@@ -280,7 +304,7 @@ class Sphere extends Drawable {
 		};
 	}
 	
-	setElementRadius() {
+	setElementSize() {
 		const diameter = this.getElementDiameter();
 		this.element.style.width = diameter + "px";
 		this.element.style.height = diameter + "px";
@@ -288,6 +312,14 @@ class Sphere extends Drawable {
 	
 	getElementDiameter() {
 		return (this.radius || 50) * 2 * env.screen.scale;
+	}
+	
+	getElementWidth() {
+		return this.getElementDiameter();
+	}
+	
+	getElementHeight() {
+		return this.getElementDiameter();
 	}
 	
 	remove() {
@@ -316,18 +348,6 @@ class Sphere extends Drawable {
 		}
 	}
 	
-	registerInDOM() {
-		const [left,top] = this.getScreenPosition();
-		const diameter = this.getElementDiameter();
-		const doDraw = 0 <= left + diameter && left <= window.innerWidth
-			&& 0 <= top + diameter && top <= window.innerHeight;
-		if (doDraw) {
-			super.registerInDOM();
-		} else {
-			super.deregister();
-		}
-	}
-	
 	draw() {
 		super.draw();
 		
@@ -346,6 +366,8 @@ class Sphere extends Drawable {
 }
 
 class TrailMarker extends Drawable {
+	
+	static SIZE = 2;
 	birthStep = env.playback.step;
 	
 	constructor(sphere) {
@@ -355,11 +377,18 @@ class TrailMarker extends Drawable {
 		
 		this.element = document.createElement("div");
 		this.element.setAttribute("class", "trail");
-		this.element.style.width = "2px";
-		this.element.style.height = "2px";
+		this.element.style.width = TrailMarker.SIZE + "px";
+		this.element.style.height = TrailMarker.SIZE + "px";
 		this.element.style.backgroundColor = sphere.color;
-		document.getElementById("canvas").appendChild(this.element);
 		sphere.trail.push(this);
+	}
+	
+	getElementWidth() {
+		return TrailMarker.SIZE;
+	}
+	
+	getElementHeight() {
+		return TrailMarker.SIZE;
 	}
 	
 }
