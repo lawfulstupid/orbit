@@ -16,12 +16,15 @@
 		<i id="resetSpeedButton" class="fas fa-rotate-left" onclick="alterSpeed(0)" title="Reset Speed"></i>
 		<i id="fastButton" class="fas fa-forward" onclick="alterSpeed(-1)" title="Faster"></i>
 		<div class="separator"></div>
-		<i id="autoFocusButton" class="fas fa-arrows-to-dot" onclick="setFocus('auto')" title="Auto-Focus On Largest Sphere"></i>
+		<i id="autoFocusButton" class="fas fa-arrows-to-eye" onclick="setFocus('auto')" title="Auto-Focus On Largest Sphere"></i>
 		<i id="manualFocusButton" class="fas fa-hand-pointer" onclick="setFocus('manual')" title="Manual Focus (click to select sphere)"></i>
 		<div class="separator"></div>
 		<i id="zoomOutButton" class="fas fa-magnifying-glass-minus" onclick="alterZoom(-1)" title="Zoom Out"></i>
 		<i id="resetZoomButton" class="fas fa-rotate-left" onclick="alterZoom(0)" title="Reset Zoom Level"></i>
 		<i id="zoomInButton" class="fas fa-magnifying-glass-plus" onclick="alterZoom(1)" title="Zoom In"></i>
+		<div class="separator"></div>
+		<i id="enableCollisionsButton" class="fa-solid fa-arrows-to-circle" onclick="setCollisions(true)" title="Enable Collisions"></i>
+		<i id="disableCollisionsButton" class="fas fa-arrows-turn-to-dots" onclick="setCollisions(false)" title="Disable Collisions"></i>
 	</div>
 </body>
 </html>

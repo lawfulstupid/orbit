@@ -187,6 +187,11 @@ function alterZoom(dir) {
 	updateButtons();
 }
 
+function setCollisions(bool) {
+	env.model.collision = bool;
+	updateButtons();
+}
+
 
 /* OBJECTS */
 
@@ -764,4 +769,6 @@ function updateButtons() {
 	document.getElementById("autoFocusButton").setAttribute("hidden", env.playback.autofocus);
 	document.getElementById("manualFocusButton").setAttribute("hidden", !env.playback.autofocus);
 	document.getElementById("resetZoomButton").setAttribute("disabled", env.screen.scale === constants.screen.scale.default);
+	document.getElementById("enableCollisionsButton").setAttribute("hidden", env.model.collision);
+	document.getElementById("disableCollisionsButton").setAttribute("hidden", !env.model.collision);
 }
