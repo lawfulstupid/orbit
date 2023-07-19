@@ -35,9 +35,10 @@ function alterSpeed(dir) {
 	if (dir === 0) {
 		env.playback.speed = constants.playback.speed.default;
 	} else {
-		env.playback.speed *= constants.playback.speed.factor ** dir;
-		env.playback.speed = Math.max(constants.playback.speed.min, env.playback.speed);
-		env.playback.speed = Math.min(constants.playback.speed.max, env.playback.speed);
+		const idx = constants.playback.speed.array.findIndex(speed => speed === env.playback.speed);
+		const oldSpeed = env.playback.speed;
+		env.playback.speed = constants.playback.speed.array.at(idx + dir);
+		if (env.playback.speed === undefined) env.playback.speed = oldSpeed;
 	}
 	updateButtons();
 }
@@ -69,10 +70,10 @@ function alterTrailLength(diff) {
 const constants = {
 	playback: {
 		speed: {
-			default: 8,
-			min: 1,
-			max: 64,
-			factor: 2
+			default: 10,
+			min: 0,
+			max: 500,
+			array: [0,1,2,5,10,20,50,100,200,500]
 		}
 	},
 	screen: {
