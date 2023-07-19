@@ -134,8 +134,8 @@ const env = {
 		trailLength: 0
 	},
 	playback: {
-		time: 0,
 		step: 0,
+		stepInProgress: false,
 		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
@@ -749,10 +749,18 @@ function getScreenCentre() {
 }
 
 function step() {
-	if (env.model.collision) checkCollisions();
-	updateAccelerations();
-	updatePositions();
-	env.playback.step += 1;
+	env.playback.stepInProgress = true;
+	updateStepButtons();
+	
+	setTimeout(() => {
+		if (env.model.collision) checkCollisions();
+		updateAccelerations();
+		updatePositions();
+		env.playback.step += 1;
+		
+		env.playback.stepInProgress = false;
+		updateStepButtons();
+	}, env.playback.speed);
 }
 
 function checkFocus() {
@@ -782,21 +790,19 @@ function draw() {
 }
 
 function main() {
-	if (env.playback.speed && env.playback.time % env.playback.speed === 0 && !env.playback.paused) {
+	if (!env.playback.paused && !env.playback.stepInProgress) {
 		step();
 	}
 	checkFocus();
 	draw();
-	env.playback.time += 1;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
 	init();
 	draw();
 	updateButtons();
-	setInterval(main, 1);
+	setInterval(main, 0);
 });
-
 
 
 var timer = function(name) {
@@ -817,9 +823,9 @@ function benchmark(fn) {
 }
 
 function updateButtons() {
+	updateStepButtons();
 	document.getElementById("pauseButton").setAttribute("hidden", env.playback.paused);
 	document.getElementById("playButton").setAttribute("hidden", !env.playback.paused);
-	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused);
 	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.min);
 	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.default);
 	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.max);
@@ -830,4 +836,9 @@ function updateButtons() {
 	document.getElementById("disableCollisionsButton").setAttribute("hidden", !env.model.collision);
 	document.getElementById("decreaseTrailButton").setAttribute("disabled", env.model.trailLength === 0);
 	document.getElementById("trailLength").innerHTML = env.model.trailLength;
+}
+
+function updateStepButtons() {
+	document.getElementById("playButton").setAttribute("disabled", env.playback.stepInProgress);
+	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused || env.playback.stepInProgress);
 }
