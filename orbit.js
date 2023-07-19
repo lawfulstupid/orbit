@@ -204,7 +204,6 @@ function alterTrailLength(diff) {
 class Drawable {
 	position;
 	element;
-	elementRegistered = false;
 	
 	getCornerCoords() {
 		return vecMul(env.screen.scale, this.position);
@@ -232,10 +231,14 @@ class Drawable {
 		};
 	}
 	
+	makeElement() {
+		throw new Error("not implemented");
+	}
+	
 	registerInDOM() {
-		if (this.element && !this.elementRegistered) {
-			document.getElementById("canvas").appendChild(this.element);
-			this.elementRegistered = true;			
+		if (!this.element) {
+			this.makeElement();
+			document.getElementById("canvas").appendChild(this.element);		
 		}
 	}
 	
@@ -246,18 +249,17 @@ class Drawable {
 		
 		if (doDraw) {
 			this.registerInDOM();
+			this.element.style.left = bounds.left + "px";
+			this.element.style.top = bounds.top + "px";
 		} else {
 			this.deregister();
 		}
-		
-		this.element.style.left = bounds.left + "px";
-		this.element.style.top = bounds.top + "px";
 	}
 	
 	deregister() {
-		if (this.element && this.elementRegistered) {
-			document.getElementById("canvas").removeChild(this.element);
-			this.elementRegistered = false;
+		if (this.element) {
+			this.element.remove();
+			this.element = undefined;
 		}
 	}
 	
@@ -286,7 +288,9 @@ class Sphere extends Drawable {
 		this.velocity = velocity || [0, 0];
 		
 		env.model.spheres[this.name] = this;
-		
+	}
+	
+	makeElement() {
 		this.element = document.createElement("div");
 		this.element.id = name;
 		this.element.setAttribute("class", "sphere");
@@ -305,9 +309,11 @@ class Sphere extends Drawable {
 	}
 	
 	setElementSize() {
-		const diameter = this.getElementDiameter();
-		this.element.style.width = diameter + "px";
-		this.element.style.height = diameter + "px";
+		if (this.element) {
+			const diameter = this.getElementDiameter();
+			this.element.style.width = diameter + "px";
+			this.element.style.height = diameter + "px";			
+		}
 	}
 	
 	getElementDiameter() {
@@ -368,19 +374,22 @@ class Sphere extends Drawable {
 class TrailMarker extends Drawable {
 	
 	static SIZE = 2;
+	sphere;
 	birthStep = env.playback.step;
 	
 	constructor(sphere) {
 		super();
-		
+		this.sphere = sphere;
 		this.position = sphere.position;
-		
+		sphere.trail.push(this);
+	}
+	
+	makeElement() {
 		this.element = document.createElement("div");
 		this.element.setAttribute("class", "trail");
 		this.element.style.width = TrailMarker.SIZE + "px";
 		this.element.style.height = TrailMarker.SIZE + "px";
-		this.element.style.backgroundColor = sphere.color;
-		sphere.trail.push(this);
+		this.element.style.backgroundColor = this.sphere.color;
 	}
 	
 	getElementWidth() {
