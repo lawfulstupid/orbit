@@ -44,7 +44,7 @@ function alterSpeed(dir) {
 
 function alterZoom(dir) {
 	if (dir === 0) {
-		env.screen.scale = constants.screen.scale.default;0
+		env.screen.scale = constants.screen.scale.default;
 	} else {
 		env.screen.scale *= constants.screen.scale.factor ** dir;
 	}
@@ -91,8 +91,10 @@ const env = {
 		trailLength: 0
 	},
 	playback: {
+		time: 0,
 		step: 0,
 		stepInProgress: false,
+		lastStepTime: 0,
 		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
@@ -421,6 +423,7 @@ function step() {
 	updateStepButtons();
 	
 	setTimeout(() => {
+		env.playback.lastStepTime = env.playback.time;
 		if (env.model.collision) checkCollisions();
 		updateAccelerations();
 		updatePositions();
@@ -428,7 +431,7 @@ function step() {
 		
 		env.playback.stepInProgress = false;
 		updateStepButtons();
-	}, env.playback.speed);
+	}, 0);
 }
 
 function checkFocus() {
@@ -458,11 +461,12 @@ function draw() {
 }
 
 function main() {
-	if (!env.playback.paused && !env.playback.stepInProgress) {
+	if (!env.playback.paused && !env.playback.stepInProgress && env.playback.lastStepTime + env.playback.speed <= env.playback.time) {
 		step();
 	}
 	checkFocus();
 	draw();
+	env.playback.time += 1;
 }
 
 function updateButtons() {
