@@ -41,9 +41,10 @@ body {
 	position: relative;
 	margin-right: 5px;
 	cursor: pointer;
+	color: inherit;
 }
 
-.control-panel > i {
+.control-panel > :not(span) {
 	width: 32px;
 }
 
