@@ -183,7 +183,7 @@ function alterZoom(dir) {
 	} else {
 		env.screen.scale *= constants.screen.scale.factor ** dir;
 	}
-	forEachSphere(sphere => sphere.setElementSize());
+	forEachSphere(sphere => sphere.updateElement());
 	updateButtons();
 }
 
@@ -294,10 +294,7 @@ class Sphere extends Drawable {
 		this.element = document.createElement("div");
 		this.element.id = name;
 		this.element.setAttribute("class", "sphere");
-		
-		this.setElementSize();
-		this.element.style.zIndex = 10000 - Math.floor(this.radius);
-		this.element.style.backgroundColor = this.color.toString();
+		this.updateElement();
 		
 		this.element.onclick = () => {
 			if (env.playback.focus === this.name) {
@@ -308,11 +305,13 @@ class Sphere extends Drawable {
 		};
 	}
 	
-	setElementSize() {
+	updateElement() {
 		if (this.element) {
 			const diameter = this.getElementDiameter();
 			this.element.style.width = diameter + "px";
 			this.element.style.height = diameter + "px";			
+			this.element.style.zIndex = 10000 - Math.floor(this.radius);
+			this.element.style.backgroundColor = this.color.toString();			
 		}
 	}
 	
@@ -703,7 +702,7 @@ function checkCollisions() {
 			
 			const r = dist(sphereA.position, sphereB.position);
 			if (r < Math.max(sphereA.radius, sphereB.radius)) {
-				combine(sphereA, sphereB);		
+				combine(sphereA, sphereB).updateElement();
 			}
 		}
 	}
@@ -714,27 +713,31 @@ function weightedAverage(x, y, wx, wy) {
 }
 
 function combine(a, b) {
+	if (a.radius < b.radius) {
+		return combine(b, a);
+	}
+	
 	const colorBlend = blend(a.color, b.color, a.getMass(), b.getMass());
 	const color = blend(colorBlend, new Color("yellow"), Object.keys(env.model.spheres).length, 1);
 	const x = weightedAverage(a.position[0], b.position[0], a.getMass(), b.getMass());
 	const y = weightedAverage(a.position[1], b.position[1], a.getMass(), b.getMass());
 	const u = weightedAverage(a.velocity[0], b.velocity[0], a.getMass(), b.getMass());
 	const v = weightedAverage(a.velocity[1], b.velocity[1], a.getMass(), b.getMass());
-	const radius = Math.cbrt(a.getMass() + b.getMass()); // grow by volume
-	const name = hashCode();
 	
-	a.remove();
+	a.radius = Math.cbrt(a.getMass() + b.getMass()); // grow by volume
+	a.color = color;
+	a.position = [x,y];
+	a.velocity = [u,v];
+	a.trail = [...a.trail, ...b.trail]; // combine trails
+	
+	b.successor = a;
 	b.remove();
-	const newSphere = new Sphere(name, radius, color, [x,y], [u,v]);
-	a.successor = newSphere;
-	b.successor = newSphere;
-	newSphere.trail = [...a.trail, ...b.trail]; // combine trails
 	
-	if (env.playback.focus === a.name || env.playback.focus === b.name) {
-		env.playback.focus = name;
+	if (env.playback.focus === b.name) {
+		env.playback.focus = a.name;
 	}
 	
-	return newSphere;
+	return a;
 }
 
 function hashCode() {
