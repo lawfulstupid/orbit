@@ -90,12 +90,12 @@ function init5() { // dust cloud
 		const y = orbit * Math.sin(posAngle);
 		
 		// Random direction velocity
-		const velAngle = randomBetween(0, 360);
-		const u = speed * Math.cos(velAngle);
-		const v = speed * Math.sin(velAngle);
+		// const velAngle = randomBetween(0, 360);
+		// const u = speed * Math.cos(velAngle);
+		// const v = speed * Math.sin(velAngle);
 		
 		// Clockwise velocity
-		// const [u,v] = vecMul(speed, unit([-y, x]));
+		const [u,v] = vecMul(speed, vecMul(0.0006, [-y, x]));
 		
 		new Sphere("planet" + i, radius, color.toString(), [x,y], [u,v]);
 	}
