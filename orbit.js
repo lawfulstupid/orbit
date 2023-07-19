@@ -797,7 +797,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-
 var timer = function(name) {
     var start = new Date();
     return {
@@ -809,9 +808,14 @@ var timer = function(name) {
     }
 };
 
-function benchmark(fn) {
+function benchmark() {
 	var t = timer('Benchmark');
-	fn();
+	for (let i = 0; i < 20; i++) {
+		step();
+		checkFocus();
+		draw();
+		env.playback.time += 1;
+	}
 	t.stop();
 }
 
