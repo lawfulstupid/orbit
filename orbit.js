@@ -691,19 +691,22 @@ function updatePositions() {
 function checkCollisions() {
 	const currentSpheres = Object.values(env.model.spheres);
 	
-	currentSpheres.forEach(a => {
-		currentSpheres.forEach(b => {
-			if (a.name >= b.name) return;
+	for (let idxA = 0; idxA < currentSpheres.length - 1; idxA++) {
+		const a = currentSpheres[idxA];
+		
+		for (let idxB = idxA + 1; idxB < currentSpheres.length; idxB++) {
+			const b = currentSpheres[idxB];
+			
 			const sphereA = a.getUltimateSuccessor();
 			const sphereB = b.getUltimateSuccessor();
-			if (sphereA.name === sphereB.name) return;
+			if (sphereA.name === sphereB.name) continue;
 			
 			const r = dist(sphereA.position, sphereB.position);
-			if (r >= sphereA.radius && r >= sphereB.radius) return;
-			
-			combine(sphereA, sphereB);
-		});
-	});
+			if (r < Math.max(sphereA.radius, sphereB.radius)) {
+				combine(sphereA, sphereB);		
+			}
+		}
+	}
 }
 
 function weightedAverage(x, y, wx, wy) {
