@@ -658,17 +658,15 @@ function forEachSphere(fn) {
 }
 
 function updateAccelerations() {
-	// Reset all accelerations
-	forEachSphere(sphere => {
-		sphere.acceleration = [0,0];
-	});
-	
 	const list = Object.values(env.model.spheres);
 	
 	for (let subjectIdx = 0; subjectIdx < list.length - 1; subjectIdx++) {
 		const subject = list[subjectIdx];
+		if (subjectIdx === 0) subject.acceleration = [0,0]; // reset acceleration on first pass
+		
 		for (let objectIdx = subjectIdx + 1; objectIdx < list.length; objectIdx++) {
 			const object = list[objectIdx];
+			if (subjectIdx === 0) object.acceleration = [0,0]; // reset acceleration on first pass
 			
 			const dir = vecSub(object.position, subject.position);
 			const baseVec = vecMul(env.model.gravity / (norm(dir) ** 3), dir);
