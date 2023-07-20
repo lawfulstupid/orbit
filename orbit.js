@@ -334,7 +334,7 @@ function forEachSphere(fn) {
 }
 
 function updateAccelerations() {
-	const list = Object.values(env.model.spheres).sort((a,b) => b.radius - a.radius);
+	const list = Object.values(env.model.spheres).sort(sortOn(s => -s.radius));
 	const pairsLimit = numPairs(env.model.processLimit);
 	const bound = revNumPairs(list.length, pairsLimit);
 	
@@ -374,6 +374,11 @@ function revNumPairs(n, p) {
 	return Math.floor(0.5 * (a - Math.sqrt(a**2 - 8*p)));
 }
 
+// Doing array.sort(sortOn(fn)) will sort the array by fn(item)
+function sortOn(fn) {
+	return (a,b) => fn(a) - fn(b);
+}
+
 function updatePositions() {
 	forEachSphere(sphere => {
 		sphere.velocity = vecAdd(sphere.velocity, sphere.acceleration);
@@ -383,13 +388,37 @@ function updatePositions() {
 }
 
 function checkCollisions() {
-	const currentSpheres = Object.values(env.model.spheres);
+	const binSize = getAutoFocusTarget().radius; // use largest radius as bin size
+	const bins = {};
 	
-	for (let idxA = 0; idxA < currentSpheres.length - 1; idxA++) {
-		const a = currentSpheres[idxA];
+	forEachSphere(sphere => {
+		const bx = Math.floor(sphere.position[0] / binSize);
+		const by = Math.floor(sphere.position[1] / binSize);
+		if (bins[[bx,by]] === undefined) {
+			bins[[bx,by]] = [];
+		}
+		bins[[bx,by]].push(sphere);
+	});
+	
+	for (const bin in bins) {
+		const [bx,by] = bin.split(',').map(x => +x);
+		const region = [];
+		// group adjacent bins into region so bin-edge-spanning collisions aren't missed
+		for (let i = -1; i <= 1; i++) {
+			for (let j = -1; j <= 1; j++) {
+				region.push(...(bins[[bx+i,by+j]] || []));
+			}
+		}
+		checkCollisionsOn(region);
+	}
+}
+
+function checkCollisionsOn(spheres) {
+	for (let idxA = 0; idxA < spheres.length - 1; idxA++) {
+		const a = spheres[idxA];
 		
-		for (let idxB = idxA + 1; idxB < currentSpheres.length; idxB++) {
-			const b = currentSpheres[idxB];
+		for (let idxB = idxA + 1; idxB < spheres.length; idxB++) {
+			const b = spheres[idxB];
 			
 			const sphereA = a.getUltimateSuccessor();
 			const sphereB = b.getUltimateSuccessor();
