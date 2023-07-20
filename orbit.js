@@ -97,6 +97,7 @@ const env = {
 		step: 0,
 		stepInProgress: false,
 		lastStepTime: 0,
+		lastStepDuration: 0,
 		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
@@ -487,6 +488,7 @@ function getScreenCentre() {
 }
 
 function step() {
+	const t = timer('step');
 	env.playback.stepInProgress = true;
 	updateStepButtons();
 	
@@ -497,6 +499,7 @@ function step() {
 		env.playback.step += 1;
 		
 		env.playback.stepInProgress = false;
+		env.playback.lastStepDuration = t.stop();
 		updateStepButtons();
 	}, 0);
 }
@@ -570,13 +573,14 @@ function updateStepButtons() {
 
 /* DEBUGGING */
 
-var timer = function(name) {
-    var start = new Date();
+function timer(name) {
+    const start = window.performance.now();
     return {
         stop: function() {
-            var end  = new Date();
-            var time = end.getTime() - start.getTime();
+            const end = window.performance.now();
+            const time = end - start;
             console.log('Timer:', name, 'finished in', time, 'ms');
+				return time;
         }
     }
 };
