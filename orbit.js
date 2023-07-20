@@ -70,7 +70,7 @@ function alterTrailLength(diff) {
 const constants = {
 	model: {
 		processLimit: {
-			min: () => Math.floor(5 * Math.sqrt(env.model.numSpheres)),
+			min: () => Math.floor(2 * Math.sqrt(env.model.numSpheres)),
 			max: 1000000000,
 			factor: 1.5
 		}
@@ -396,16 +396,23 @@ function updateAccelerations() {
 			const object = list[objectIdx];
 			if (subjectIdx === 0) object.acceleration = [0,0]; // reset acceleration on first pass
 			
-			const dir = vecSub(object.position, subject.position);
-			const baseVec = vecMul(env.model.gravity / (norm(dir) ** 3), dir);
-			
-			const acc1 = vecMul(object.getMass(), baseVec);
-			subject.acceleration = vecAdd(subject.acceleration, acc1);
-			
-			const acc2 = vecMul(-subject.getMass(), baseVec);
-			object.acceleration = vecAdd(object.acceleration, acc2);
+			updateAcceleration(subject, object, false);
 		}
 	}
+}
+
+// Generally assumes subject is bigger than object (relevant if mutual = false)
+function updateAcceleration(subject, object, mutual = true) {
+	const dir = vecSub(object.position, subject.position);
+	const baseVec = vecMul(env.model.gravity / (norm(dir) ** 3), dir);
+	
+	if (mutual) {
+		const acc1 = vecMul(object.getMass(), baseVec);
+		subject.acceleration = vecAdd(subject.acceleration, acc1);
+	}
+	
+	const acc2 = vecMul(-subject.getMass(), baseVec);
+	object.acceleration = vecAdd(object.acceleration, acc2);
 }
 
 // Returns the number of iterations in the following loop system:
