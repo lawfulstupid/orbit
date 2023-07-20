@@ -356,7 +356,7 @@ function binByLocation(binWidth, processor) {
 		// group adjacent bins into region so bin-edge-spanning collisions aren't missed
 		for (let i = -1; i <= 1; i++) {
 			for (let j = -1; j <= 1; j++) {
-				if (i !== 0 || j !== 0) {
+				if (i || j) {
 					region.push(...(bins[[bx+i,by+j]] || []));					
 				}
 			}
@@ -428,13 +428,9 @@ function checkCollisions() {
 		// We need to compare the inside of the bin to itself and to it's neighbours
 		// but we don't need to compare neighbours to themselves or other neighbours, that'll be done in a separate bin
 		for (let idxA = 0; idxA < bin.length - 1; idxA++) {
-			const a = region[idxA];
-			
 			for (let idxB = idxA + 1; idxB < region.length; idxB++) {
-				const b = region[idxB];
-				
-				const sphereA = a.getUltimateSuccessor();
-				const sphereB = b.getUltimateSuccessor();
+				const sphereA = region[idxA].getUltimateSuccessor();
+				const sphereB = region[idxB].getUltimateSuccessor();
 				if (sphereA.name === sphereB.name) continue;
 				
 				const r = dist(sphereA.position, sphereB.position);
