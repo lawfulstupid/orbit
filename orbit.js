@@ -68,6 +68,13 @@ function alterTrailLength(diff) {
 /* MODEL */
 
 const constants = {
+	model: {
+		processLimit: {
+			min: 500,
+			max: 1000000,
+			factor: 1.5
+		}
+	},
 	playback: {
 		speed: {
 			default: 10,
@@ -91,7 +98,7 @@ const env = {
 		gravity: 0.1, // gravitational constant
 		collision: true,
 		trailLength: 0,
-		processLimit: 1000
+		processLimit: constants.model.processLimit.min
 	},
 	playback: {
 		step: {
@@ -546,6 +553,22 @@ function beforeMain() {
 	draw();
 }
 
+function processLimitAdjustment() {
+	const q = env.playback.step.lastDuration / env.playback.frame.lastDuration;
+	let newLimit = env.model.processLimit;
+	
+	if (q >= 1) {
+		newLimit = Math.max(constants.model.processLimit.min, Math.floor(env.model.processLimit / constants.model.processLimit.factor));
+	} else if (q < 0.5) {
+		newLimit = Math.min(constants.model.processLimit.max, Math.floor(env.model.processLimit * constants.model.processLimit.factor));
+	}
+	
+	if (newLimit !== env.model.processLimit) {
+		console.log('New Process Limit:', newLimit);
+		env.model.processLimit = newLimit;
+	}
+}
+
 function main(timestamp) {
 	env.playback.frame.inProgress = true;
 	env.playback.frame.index++;
@@ -554,6 +577,7 @@ function main(timestamp) {
 	
 	if (!env.playback.paused && !env.playback.step.inProgress && env.playback.step.lastStart + env.playback.speed <= timestamp) {
 		env.playback.step.lastStart = timestamp;
+		processLimitAdjustment();
 		step();
 	}
 	checkFocus();
