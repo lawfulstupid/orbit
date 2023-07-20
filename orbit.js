@@ -421,6 +421,8 @@ function updatePositions() {
 
 function checkCollisions() {
 	const binWidth = getAutoFocusTarget().radius + 1; // use largest radius for bin size
+	const keepList = new Set();
+	const killList = new Set();
 	
 	binByLocation(binWidth, (bin, region) => {
 		// We need to compare the inside of the bin to itself and to it's neighbours
@@ -437,10 +439,21 @@ function checkCollisions() {
 				
 				const r = dist(sphereA.position, sphereB.position);
 				if (r < Math.max(sphereA.radius, sphereB.radius)) {
-					combine(sphereA, sphereB);
+					const [keep,kill] = combine(sphereA, sphereB);
+					keepList.add(keep);
+					killList.add(kill);
 				}
 			}
 		}
+	});
+	
+	killList.forEach(sphere => {
+		sphere.remove();
+		keepList.delete(sphere);
+	});
+	
+	keepList.forEach(sphere => {
+		sphere.updateElement();
 	});
 }
 
@@ -461,16 +474,14 @@ function combine(a, b) {
 	a.position = [x,y];
 	a.velocity = [u,v];
 	a.trail.push(...b.trail); // combine trails
-	a.updateElement();
 	
 	b.successor = a;
-	b.remove();
 	
 	if (env.playback.focus === b.name) {
 		env.playback.focus = a.name;
 	}
 	
-	return a;
+	return [a,b];
 }
 
 
