@@ -417,7 +417,7 @@ function updatePositions() {
 }
 
 function checkCollisions() {
-	const binWidth = 2 * getAutoFocusTarget().radius; // use largest radius for bin size
+	const binWidth = getAutoFocusTarget().radius + 1; // use largest radius for bin size
 	binByLocation(binWidth, (bin, region) => {
 		// We need to compare the inside of the bin to itself and to it's neighbours
 		// but we don't need to compare neighbours to themselves or other neighbours, that'll be done in a separate bin
