@@ -455,12 +455,15 @@ function step() {
 }
 
 function checkFocus() {
-	if (!env.playback.autofocus) return;
-	env.playback.focus = getAutoFocusTarget();
+	if (env.playback.autofocus) {
+		env.playback.focus = getAutoFocusTarget().name;
+	}
 }
 
 function getAutoFocusTarget() {
-	return Object.values(env.model.spheres).sort((a,b) => b.radius - a.radius).at(0)?.name || null;
+	return Object.values(env.model.spheres).reduce((largestSphere, sphere) => {
+		return largestSphere.radius < sphere.radius ? sphere : largestSphere;
+	}, {radius: 0});
 }
 
 function draw() {
