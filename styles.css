@@ -26,13 +26,10 @@ body {
 
 .control-panel {
 	position: absolute;
-	top: 0px;
-	left: 0px;
 	color: white;
 	font-size: xx-large;
 	z-index: 10000;
-	padding-top: 5px;
-	padding-left: 8px;
+	padding: 5px 8px;
 	user-select: none;
 	text-align: center;
 }

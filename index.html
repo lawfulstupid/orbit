@@ -10,7 +10,7 @@
 </head>
 <body>
 	<div id="canvas"></div>
-	<div class="control-panel">
+	<div class="control-panel" style="top: 0; left: 0">
 		<i id="pauseButton" class="fas fa-pause" onclick="playPause()" title="Pause"></i>
 		<i id="playButton" class="fas fa-play" onclick="playPause()" title="Play"></i>
 		<i id="stepButton" class="fas fa-step-forward" onclick="step()" title="Step Forward"></i>
@@ -36,6 +36,10 @@
 		<a href="https://github.com/lawfulstupid/orbit/blob/master/README.md" target="_blank">
 			<i id="helpButton" class="fas fa-circle-question" title="Help"></i>
 		</a>
+	</div>
+	<div class="control-panel" style="top: 0; right: 0">
+		<span>FPS:</span>
+		<span id="fpsDisplay" class="number" title="FPS"></span>
 	</div>
 </body>
 </html>

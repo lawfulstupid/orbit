@@ -545,6 +545,8 @@ function draw() {
 	forEachSphere(sphere => {
 		sphere.draw();
 	});
+	
+	document.getElementById("fpsDisplay").innerHTML = (1000 / Math.max(env.playback.step.lastDuration, env.playback.frame.lastDuration)).toFixed(2);
 }
 
 function beforeMain() {
