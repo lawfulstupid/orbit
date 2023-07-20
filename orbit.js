@@ -334,13 +334,12 @@ function forEachSphere(fn) {
 }
 
 // processor: (bin, region) => ()
-// Guaranteed that bin === region.slice(0, binSize)
-function binByLocation(binSize, processor) {
+function binByLocation(binWidth, processor) {
 	const bins = {};
 	
 	forEachSphere(sphere => {
-		const bx = Math.floor(sphere.position[0] / binSize);
-		const by = Math.floor(sphere.position[1] / binSize);
+		const bx = Math.floor(sphere.position[0] / binWidth);
+		const by = Math.floor(sphere.position[1] / binWidth);
 		if (bins[[bx,by]] === undefined) {
 			bins[[bx,by]] = [];
 		}
@@ -422,15 +421,15 @@ function updatePositions() {
 }
 
 function checkCollisions() {
-	const binSize = 2 * getAutoFocusTarget().radius; // use largest radius for bin size
-	binByLocation(binSize, (b, spheres) => {
+	const binWidth = 2 * getAutoFocusTarget().radius; // use largest radius for bin size
+	binByLocation(binWidth, (bin, region) => {
 		// We need to compare the inside of the bin to itself and to it's neighbours
 		// but we don't need to compare neighbours to themselves or other neighbours, that'll be done in a separate bin
-		for (let idxA = 0; idxA < binSize - 1; idxA++) {
-			const a = spheres[idxA];
+		for (let idxA = 0; idxA < bin.length; idxA++) {
+			const a = region[idxA];
 			
-			for (let idxB = idxA + 1; idxB < spheres.length; idxB++) {
-				const b = spheres[idxB];
+			for (let idxB = idxA + 1; idxB < region.length; idxB++) {
+				const b = region[idxB];
 				
 				const sphereA = a.getUltimateSuccessor();
 				const sphereB = b.getUltimateSuccessor();
