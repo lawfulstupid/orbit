@@ -384,7 +384,7 @@ function binByLocation(binWidth, processor) {
 }
 
 function updateAccelerations() {
-	const list = Object.values(env.model.spheres).sort(sortOn(s => -s.radius));
+	const list = Object.values(env.model.spheres).sort(sortOn(s => -s.radius + Math.random())); // add a small (0-1) random number to mix things up
 	const pairsLimit = numPairs(env.model.processLimit);
 	const bound = revNumPairs(list.length, pairsLimit);
 	
