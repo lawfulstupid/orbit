@@ -3,36 +3,33 @@ class Color {
 	g = 0;
 	b = 0;
 	
-	constructor(c, g, b) {
-		if (!c) {
-			this.r = randomBetween(0, 255);
-			this.g = randomBetween(0, 255);
-			this.b = randomBetween(0, 255);
-		} else if (c instanceof Color) {
-			this.r = c.r;
-			this.g = c.g;
-			this.b = c.b;
-		} else if (g !== undefined && b !== undefined) {
-			this.r = c;
-			this.g = g;
-			this.b = b;
-		} else if (c[0] === '#') {
-			this.r = parseInt(c.slice(1,3), 16);
-			this.g = parseInt(c.slice(3,5), 16);
-			this.b = parseInt(c.slice(5,7), 16);
-		} else if (c.slice(0,3) === 'rgb') {
-			c = c.slice(4);
-			this.r = parseFloat(c);
-			c = c.slice(c.indexOf(",")+1);
-			this.g = parseFloat(c);
-			c = c.slice(c.indexOf(",")+1);
-			this.b = parseFloat(c);
-		} else {
-			const color = new Color(colorDict[c.toLowerCase()]);
-			this.r = color.r;
-			this.g = color.g;
-			this.b = color.b;
+	constructor(r, g, b) {
+		this.r = r;
+		this.g = g;
+		this.b = b;
+	}
+	
+	static rgb(r, g, b) {
+		return new Color(r, g, b);
+	}
+	
+	static hex(str) {
+		if (str[0] !== '#' || str.length !== 7) {
+			throw new Error("Invalid hex code: " + str);
 		}
+		return Color.rgb(
+			parseInt(str.slice(1,3), 16),
+			parseInt(str.slice(3,5), 16),
+			parseInt(str.slice(5,7), 16)
+		);
+	}
+	
+	static random() {
+		return Color.rgb(
+			randomBetween(0, 255),
+			randomBetween(0, 255),
+			randomBetween(0, 255)
+		);
 	}
 	
 	toString() {
@@ -42,158 +39,155 @@ class Color {
 	equals(color) {
 		return this.r === color.r && this.g === color.g && this.b === color.b;
 	}
+	
+	static aliceblue = Color.hex("#f0f8ff");
+	static antiquewhite = Color.hex("#faebd7");
+	static aqua = Color.hex("#00ffff");
+	static aquamarine = Color.hex("#7fffd4");
+	static azure = Color.hex("#f0ffff");
+	static beige = Color.hex("#f5f5dc");
+	static bisque = Color.hex("#ffe4c4");
+	static black = Color.hex("#000000");
+	static blanchedalmond = Color.hex("#ffebcd");
+	static blue = Color.hex("#0000ff");
+	static blueviolet = Color.hex("#8a2be2");
+	static brown = Color.hex("#a52a2a");
+	static burlywood = Color.hex("#deb887");
+	static cadetblue = Color.hex("#5f9ea0");
+	static chartreuse = Color.hex("#7fff00");
+	static chocolate = Color.hex("#d2691e");
+	static coral = Color.hex("#ff7f50");
+	static cornflowerblue = Color.hex("#6495ed");
+	static cornsilk = Color.hex("#fff8dc");
+	static crimson = Color.hex("#dc143c");
+	static cyan = Color.hex("#00ffff");
+	static darkblue = Color.hex("#00008b");
+	static darkcyan = Color.hex("#008b8b");
+	static darkgoldenrod = Color.hex("#b8860b");
+	static darkgray = Color.hex("#a9a9a9");
+	static darkgreen = Color.hex("#006400");
+	static darkkhaki = Color.hex("#bdb76b");
+	static darkmagenta = Color.hex("#8b008b");
+	static darkolivegreen = Color.hex("#556b2f");
+	static darkorange = Color.hex("#ff8c00");
+	static darkorchid = Color.hex("#9932cc");
+	static darkred = Color.hex("#8b0000");
+	static darksalmon = Color.hex("#e9967a");
+	static darkseagreen = Color.hex("#8fbc8f");
+	static darkslateblue = Color.hex("#483d8b");
+	static darkslategray = Color.hex("#2f4f4f");
+	static darkturquoise = Color.hex("#00ced1");
+	static darkviolet = Color.hex("#9400d3");
+	static deeppink = Color.hex("#ff1493");
+	static deepskyblue = Color.hex("#00bfff");
+	static dimgray = Color.hex("#696969");
+	static dodgerblue = Color.hex("#1e90ff");
+	static firebrick = Color.hex("#b22222");
+	static floralwhite = Color.hex("#fffaf0");
+	static forestgreen = Color.hex("#228b22");
+	static fuchsia = Color.hex("#ff00ff");
+	static gainsboro = Color.hex("#dcdcdc");
+	static ghostwhite = Color.hex("#f8f8ff");
+	static gold = Color.hex("#ffd700");
+	static goldenrod = Color.hex("#daa520");
+	static gray = Color.hex("#808080");
+	static green = Color.hex("#008000");
+	static greenyellow = Color.hex("#adff2f");
+	static honeydew = Color.hex("#f0fff0");
+	static hotpink = Color.hex("#ff69b4");
+	static indianred  = Color.hex("#cd5c5c");
+	static indigo = Color.hex("#4b0082");
+	static ivory = Color.hex("#fffff0");
+	static khaki = Color.hex("#f0e68c");
+	static lavender = Color.hex("#e6e6fa");
+	static lavenderblush = Color.hex("#fff0f5");
+	static lawngreen = Color.hex("#7cfc00");
+	static lemonchiffon = Color.hex("#fffacd");
+	static lightblue = Color.hex("#add8e6");
+	static lightcoral = Color.hex("#f08080");
+	static lightcyan = Color.hex("#e0ffff");
+	static lightgoldenrodyellow = Color.hex("#fafad2");
+	static lightgrey = Color.hex("#d3d3d3");
+	static lightgreen = Color.hex("#90ee90");
+	static lightpink = Color.hex("#ffb6c1");
+	static lightsalmon = Color.hex("#ffa07a");
+	static lightseagreen = Color.hex("#20b2aa");
+	static lightskyblue = Color.hex("#87cefa");
+	static lightslategray = Color.hex("#778899");
+	static lightsteelblue = Color.hex("#b0c4de");
+	static lightyellow = Color.hex("#ffffe0");
+	static lime = Color.hex("#00ff00");
+	static limegreen = Color.hex("#32cd32");
+	static linen = Color.hex("#faf0e6");
+	static magenta = Color.hex("#ff00ff");
+	static maroon = Color.hex("#800000");
+	static mediumaquamarine = Color.hex("#66cdaa");
+	static mediumblue = Color.hex("#0000cd");
+	static mediumorchid = Color.hex("#ba55d3");
+	static mediumpurple = Color.hex("#9370d8");
+	static mediumseagreen = Color.hex("#3cb371");
+	static mediumslateblue = Color.hex("#7b68ee");
+	static mediumspringgreen = Color.hex("#00fa9a");
+	static mediumturquoise = Color.hex("#48d1cc");
+	static mediumvioletred = Color.hex("#c71585");
+	static midnightblue = Color.hex("#191970");
+	static mintcream = Color.hex("#f5fffa");
+	static mistyrose = Color.hex("#ffe4e1");
+	static moccasin = Color.hex("#ffe4b5");
+	static navajowhite = Color.hex("#ffdead");
+	static navy = Color.hex("#000080");
+	static oldlace = Color.hex("#fdf5e6");
+	static olive = Color.hex("#808000");
+	static olivedrab = Color.hex("#6b8e23");
+	static orange = Color.hex("#ffa500");
+	static orangered = Color.hex("#ff4500");
+	static orchid = Color.hex("#da70d6");
+	static palegoldenrod = Color.hex("#eee8aa");
+	static palegreen = Color.hex("#98fb98");
+	static paleturquoise = Color.hex("#afeeee");
+	static palevioletred = Color.hex("#d87093");
+	static papayawhip = Color.hex("#ffefd5");
+	static peachpuff = Color.hex("#ffdab9");
+	static peru = Color.hex("#cd853f");
+	static pink = Color.hex("#ffc0cb");
+	static plum = Color.hex("#dda0dd");
+	static powderblue = Color.hex("#b0e0e6");
+	static purple = Color.hex("#800080");
+	static red = Color.hex("#ff0000");
+	static rosybrown = Color.hex("#bc8f8f");
+	static royalblue = Color.hex("#4169e1");
+	static saddlebrown = Color.hex("#8b4513");
+	static salmon = Color.hex("#fa8072");
+	static sandybrown = Color.hex("#f4a460");
+	static seagreen = Color.hex("#2e8b57");
+	static seashell = Color.hex("#fff5ee");
+	static sienna = Color.hex("#a0522d");
+	static silver = Color.hex("#c0c0c0");
+	static skyblue = Color.hex("#87ceeb");
+	static slateblue = Color.hex("#6a5acd");
+	static slategray = Color.hex("#708090");
+	static snow = Color.hex("#fffafa");
+	static springgreen = Color.hex("#00ff7f");
+	static steelblue = Color.hex("#4682b4");
+	static tan = Color.hex("#d2b48c");
+	static teal = Color.hex("#008080");
+	static thistle = Color.hex("#d8bfd8");
+	static tomato = Color.hex("#ff6347");
+	static turquoise = Color.hex("#40e0d0");
+	static violet = Color.hex("#ee82ee");
+	static wheat = Color.hex("#f5deb3");
+	static white = Color.hex("#ffffff");
+	static whitesmoke = Color.hex("#f5f5f5");
+	static yellow = Color.hex("#ffff00");
+	static yellowgreen = Color.hex("#9acd32");
 }
 
-const colorDict = {
-	"aliceblue": "#f0f8ff",
-	"antiquewhite": "#faebd7",
-	"aqua": "#00ffff",
-	"aquamarine": "#7fffd4",
-	"azure": "#f0ffff",
-	"beige": "#f5f5dc",
-	"bisque": "#ffe4c4",
-	"black": "#000000",
-	"blanchedalmond": "#ffebcd",
-	"blue": "#0000ff",
-	"blueviolet": "#8a2be2",
-	"brown": "#a52a2a",
-	"burlywood": "#deb887",
-	"cadetblue": "#5f9ea0",
-	"chartreuse": "#7fff00",
-	"chocolate": "#d2691e",
-	"coral": "#ff7f50",
-	"cornflowerblue": "#6495ed",
-	"cornsilk": "#fff8dc",
-	"crimson": "#dc143c",
-	"cyan": "#00ffff",
-	"darkblue": "#00008b",
-	"darkcyan": "#008b8b",
-	"darkgoldenrod": "#b8860b",
-	"darkgray": "#a9a9a9",
-	"darkgreen": "#006400",
-	"darkkhaki": "#bdb76b",
-	"darkmagenta": "#8b008b",
-	"darkolivegreen": "#556b2f",
-	"darkorange": "#ff8c00",
-	"darkorchid": "#9932cc",
-	"darkred": "#8b0000",
-	"darksalmon": "#e9967a",
-	"darkseagreen": "#8fbc8f",
-	"darkslateblue": "#483d8b",
-	"darkslategray": "#2f4f4f",
-	"darkturquoise": "#00ced1",
-	"darkviolet": "#9400d3",
-	"deeppink": "#ff1493",
-	"deepskyblue": "#00bfff",
-	"dimgray": "#696969",
-	"dodgerblue": "#1e90ff",
-	"firebrick": "#b22222",
-	"floralwhite": "#fffaf0",
-	"forestgreen": "#228b22",
-	"fuchsia": "#ff00ff",
-	"gainsboro": "#dcdcdc",
-	"ghostwhite": "#f8f8ff",
-	"gold": "#ffd700",
-	"goldenrod": "#daa520",
-	"gray": "#808080",
-	"green": "#008000",
-	"greenyellow": "#adff2f",
-	"honeydew": "#f0fff0",
-	"hotpink": "#ff69b4",
-	"indianred ": "#cd5c5c",
-	"indigo": "#4b0082",
-	"ivory": "#fffff0",
-	"khaki": "#f0e68c",
-	"lavender": "#e6e6fa",
-	"lavenderblush": "#fff0f5",
-	"lawngreen": "#7cfc00",
-	"lemonchiffon": "#fffacd",
-	"lightblue": "#add8e6",
-	"lightcoral": "#f08080",
-	"lightcyan": "#e0ffff",
-	"lightgoldenrodyellow": "#fafad2",
-	"lightgrey": "#d3d3d3",
-	"lightgreen": "#90ee90",
-	"lightpink": "#ffb6c1",
-	"lightsalmon": "#ffa07a",
-	"lightseagreen": "#20b2aa",
-	"lightskyblue": "#87cefa",
-	"lightslategray": "#778899",
-	"lightsteelblue": "#b0c4de",
-	"lightyellow": "#ffffe0",
-	"lime": "#00ff00",
-	"limegreen": "#32cd32",
-	"linen": "#faf0e6",
-	"magenta": "#ff00ff",
-	"maroon": "#800000",
-	"mediumaquamarine": "#66cdaa",
-	"mediumblue": "#0000cd",
-	"mediumorchid": "#ba55d3",
-	"mediumpurple": "#9370d8",
-	"mediumseagreen": "#3cb371",
-	"mediumslateblue": "#7b68ee",
-	"mediumspringgreen": "#00fa9a",
-	"mediumturquoise": "#48d1cc",
-	"mediumvioletred": "#c71585",
-	"midnightblue": "#191970",
-	"mintcream": "#f5fffa",
-	"mistyrose": "#ffe4e1",
-	"moccasin": "#ffe4b5",
-	"navajowhite": "#ffdead",
-	"navy": "#000080",
-	"oldlace": "#fdf5e6",
-	"olive": "#808000",
-	"olivedrab": "#6b8e23",
-	"orange": "#ffa500",
-	"orangered": "#ff4500",
-	"orchid": "#da70d6",
-	"palegoldenrod": "#eee8aa",
-	"palegreen": "#98fb98",
-	"paleturquoise": "#afeeee",
-	"palevioletred": "#d87093",
-	"papayawhip": "#ffefd5",
-	"peachpuff": "#ffdab9",
-	"peru": "#cd853f",
-	"pink": "#ffc0cb",
-	"plum": "#dda0dd",
-	"powderblue": "#b0e0e6",
-	"purple": "#800080",
-	"red": "#ff0000",
-	"rosybrown": "#bc8f8f",
-	"royalblue": "#4169e1",
-	"saddlebrown": "#8b4513",
-	"salmon": "#fa8072",
-	"sandybrown": "#f4a460",
-	"seagreen": "#2e8b57",
-	"seashell": "#fff5ee",
-	"sienna": "#a0522d",
-	"silver": "#c0c0c0",
-	"skyblue": "#87ceeb",
-	"slateblue": "#6a5acd",
-	"slategray": "#708090",
-	"snow": "#fffafa",
-	"springgreen": "#00ff7f",
-	"steelblue": "#4682b4",
-	"tan": "#d2b48c",
-	"teal": "#008080",
-	"thistle": "#d8bfd8",
-	"tomato": "#ff6347",
-	"turquoise": "#40e0d0",
-	"violet": "#ee82ee",
-	"wheat": "#f5deb3",
-	"white": "#ffffff",
-	"whitesmoke": "#f5f5f5",
-	"yellow": "#ffff00",
-	"yellowgreen": "#9acd32"
-};
-
 function blend(c1, c2, w1 = 1, w2 = 1) {
-	const black = new Color("black");
-	if (c1.equals(black) || c2.equals(black)) return black;
+	if (c1.equals(Color.black) || c2.equals(Color.black)) return Color.black;
 	const r = weightedAverage(c1.r, c2.r, w1, w2);
 	const g = weightedAverage(c1.g, c2.g, w1, w2);
 	const b = weightedAverage(c1.b, c2.b, w1, w2);
-	return new Color(r, g, b);
+	return Color.rgb(r, g, b);
 }
 
 function weightedAverage(x, y, wx, wy) {

@@ -190,7 +190,7 @@ class Sphere extends Drawable {
 		// Set params
 		this.name = name;
 		this.radius = radius;
-		this.color = new Color(color || "gray");
+		this.color = color || Color.gray;
 		this.position = position || [0, 0];
 		this.velocity = velocity || [0, 0];
 		
@@ -295,7 +295,7 @@ class TrailMarker extends Drawable {
 		this.element.setAttribute("class", "trail");
 		this.element.style.width = TrailMarker.SIZE + "px";
 		this.element.style.height = TrailMarker.SIZE + "px";
-		this.element.style.backgroundColor = this.sphere.color;
+		this.element.style.backgroundColor = this.sphere.color.toString();
 	}
 	
 	getElementWidth() {
@@ -418,6 +418,9 @@ function updatePositions() {
 
 function checkCollisions() {
 	const binWidth = getAutoFocusTarget().radius + 1; // use largest radius for bin size
+	
+	
+	
 	binByLocation(binWidth, (bin, region) => {
 		// We need to compare the inside of the bin to itself and to it's neighbours
 		// but we don't need to compare neighbours to themselves or other neighbours, that'll be done in a separate bin
@@ -433,7 +436,7 @@ function checkCollisions() {
 				
 				const r = dist(sphereA.position, sphereB.position);
 				if (r < Math.max(sphereA.radius, sphereB.radius)) {
-					combine(sphereA, sphereB).updateElement();
+					combine(sphereA, sphereB);
 				}
 			}
 		}
@@ -445,8 +448,8 @@ function combine(a, b) {
 		return combine(b, a);
 	}
 	
-	const colorBlend = blend(a.color, b.color, a.getMass(), b.getMass());
-	const color = blend(colorBlend, new Color("yellow"), Object.keys(env.model.spheres).length, 1);
+	let color = blend(a.color, b.color, a.getMass(), b.getMass());
+	color = blend(color, Color.yellow, Object.values(env.model.spheres).length, 1);
 	const x = weightedAverage(a.position[0], b.position[0], a.getMass(), b.getMass());
 	const y = weightedAverage(a.position[1], b.position[1], a.getMass(), b.getMass());
 	const u = weightedAverage(a.velocity[0], b.velocity[0], a.getMass(), b.getMass());
@@ -456,7 +459,8 @@ function combine(a, b) {
 	a.color = color;
 	a.position = [x,y];
 	a.velocity = [u,v];
-	a.trail = [...a.trail, ...b.trail]; // combine trails
+	a.trail.push(...b.trail); // combine trails
+	a.updateElement();
 	
 	b.successor = a;
 	b.remove();
