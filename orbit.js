@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	init();
 	draw();
 	updateButtons();
-	setInterval(main, 0);
+	window.requestAnimationFrame(main);
 });
 
 function init() {
@@ -73,7 +73,7 @@ const constants = {
 			default: 10,
 			min: 0,
 			max: 500,
-			array: [0,1,2,5,10,20,50,100,200,500]
+			array: [0,1,2,5,10,20,50,100,200,500,1000]
 		}
 	},
 	screen: {
@@ -94,7 +94,6 @@ const env = {
 		processLimit: 1000
 	},
 	playback: {
-		time: 0,
 		step: 0,
 		stepInProgress: false,
 		lastStepTime: 0,
@@ -331,7 +330,7 @@ function getFocus() {
 /* BUSINESS LOGIC */
 
 function forEachSphere(fn) {
-	for (var sphere of Object.values(env.model.spheres)) {
+	for (const sphere of Object.values(env.model.spheres)) {
 		fn(sphere);
 	}
 }
@@ -492,7 +491,6 @@ function step() {
 	updateStepButtons();
 	
 	setTimeout(() => {
-		env.playback.lastStepTime = env.playback.time;
 		if (env.model.collision) checkCollisions();
 		updateAccelerations();
 		updatePositions();
@@ -532,13 +530,14 @@ function draw() {
 	});
 }
 
-function main() {
-	if (!env.playback.paused && !env.playback.stepInProgress && env.playback.lastStepTime + env.playback.speed <= env.playback.time) {
+function main(timestamp) {
+	if (!env.playback.paused && !env.playback.stepInProgress && env.playback.lastStepTime + env.playback.speed <= timestamp) {
+		env.playback.lastStepTime = timestamp;
 		step();
 	}
 	checkFocus();
 	draw();
-	env.playback.time += 1;
+	window.requestAnimationFrame(main);
 }
 
 function updateButtons() {
