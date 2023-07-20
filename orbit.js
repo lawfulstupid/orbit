@@ -100,6 +100,12 @@ const env = {
 			lastStart: 0,
 			lastDuration: 0
 		},
+		frame: {
+			index: 0,
+			inProgress: false,
+			lastStart: 0,
+			lastDuration: 0
+		},
 		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
@@ -542,12 +548,19 @@ function beforeMain() {
 }
 
 function main(timestamp) {
+	env.playback.frame.inProgress = true;
+	env.playback.frame.index++;
+	env.playback.frame.lastDuration = timestamp - env.playback.frame.lastStart;
+	env.playback.frame.lastStart = timestamp;
+	
 	if (!env.playback.paused && !env.playback.step.inProgress && env.playback.step.lastStart + env.playback.speed <= timestamp) {
 		env.playback.step.lastStart = timestamp;
 		step();
 	}
 	checkFocus();
 	draw();
+	
+	env.playback.frame.inProgress = false;
 	window.requestAnimationFrame(main);
 }
 
