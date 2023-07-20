@@ -435,7 +435,7 @@ function checkCollisions() {
 	binByLocation(binWidth, (bin, region) => {
 		// We need to compare the inside of the bin to itself and to it's neighbours
 		// but we don't need to compare neighbours to themselves or other neighbours, that'll be done in a separate bin
-		for (let idxA = 0; idxA < bin.length - 1; idxA++) {
+		for (let idxA = 0; idxA < bin.length; idxA++) {
 			for (let idxB = idxA + 1; idxB < region.length; idxB++) {
 				const sphereA = region[idxA].getUltimateSuccessor();
 				const sphereB = region[idxB].getUltimateSuccessor();
