@@ -333,6 +333,36 @@ function forEachSphere(fn) {
 	}
 }
 
+// processor: (bin, region) => ()
+// Guaranteed that bin === region.slice(0, binSize)
+function binByLocation(binSize, processor) {
+	const bins = {};
+	
+	forEachSphere(sphere => {
+		const bx = Math.floor(sphere.position[0] / binSize);
+		const by = Math.floor(sphere.position[1] / binSize);
+		if (bins[[bx,by]] === undefined) {
+			bins[[bx,by]] = [];
+		}
+		bins[[bx,by]].push(sphere);
+	});
+	
+	for (const key in bins) {
+		const [bx,by] = key.split(',').map(x => +x);
+		const bin = bins[[bx,by]];
+		const region = [...bin];
+		// group adjacent bins into region so bin-edge-spanning collisions aren't missed
+		for (let i = -1; i <= 1; i++) {
+			for (let j = -1; j <= 1; j++) {
+				if (i !== 0 || j !== 0) {
+					region.push(...(bins[[bx+i,by+j]] || []));					
+				}
+			}
+		}
+		processor(bin, region);
+	}
+}
+
 function updateAccelerations() {
 	const list = Object.values(env.model.spheres).sort(sortOn(s => -s.radius));
 	const pairsLimit = numPairs(env.model.processLimit);
@@ -389,47 +419,26 @@ function updatePositions() {
 
 function checkCollisions() {
 	const binSize = 2 * getAutoFocusTarget().radius; // use largest radius for bin size
-	const bins = {};
-	
-	forEachSphere(sphere => {
-		const bx = Math.floor(sphere.position[0] / binSize);
-		const by = Math.floor(sphere.position[1] / binSize);
-		if (bins[[bx,by]] === undefined) {
-			bins[[bx,by]] = [];
+	binByLocation(binSize, (b, spheres) => {
+		// We need to compare the inside of the bin to itself and to it's neighbours
+		// but we don't need to compare neighbours to themselves or other neighbours, that'll be done in a separate bin
+		for (let idxA = 0; idxA < binSize - 1; idxA++) {
+			const a = spheres[idxA];
+			
+			for (let idxB = idxA + 1; idxB < spheres.length; idxB++) {
+				const b = spheres[idxB];
+				
+				const sphereA = a.getUltimateSuccessor();
+				const sphereB = b.getUltimateSuccessor();
+				if (sphereA.name === sphereB.name) continue;
+				
+				const r = dist(sphereA.position, sphereB.position);
+				if (r < Math.max(sphereA.radius, sphereB.radius)) {
+					combine(sphereA, sphereB).updateElement();
+				}
+			}
 		}
-		bins[[bx,by]].push(sphere);
 	});
-	
-	for (const bin in bins) {
-		const [bx,by] = bin.split(',').map(x => +x);
-		const region = [];
-		// group adjacent bins into region so bin-edge-spanning collisions aren't missed
-		for (let i = -1; i <= 1; i++) {
-			for (let j = -1; j <= 1; j++) {
-				region.push(...(bins[[bx+i,by+j]] || []));
-			}
-		}
-		checkCollisionsOn(region);
-	}
-}
-
-function checkCollisionsOn(spheres) {
-	for (let idxA = 0; idxA < spheres.length - 1; idxA++) {
-		const a = spheres[idxA];
-		
-		for (let idxB = idxA + 1; idxB < spheres.length; idxB++) {
-			const b = spheres[idxB];
-			
-			const sphereA = a.getUltimateSuccessor();
-			const sphereB = b.getUltimateSuccessor();
-			if (sphereA.name === sphereB.name) continue;
-			
-			const r = dist(sphereA.position, sphereB.position);
-			if (r < Math.max(sphereA.radius, sphereB.radius)) {
-				combine(sphereA, sphereB).updateElement();
-			}
-		}
-	}
 }
 
 function combine(a, b) {
