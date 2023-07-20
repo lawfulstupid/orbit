@@ -2,8 +2,8 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 	init();
-	draw();
 	updateButtons();
+	beforeMain();
 	window.requestAnimationFrame(main);
 });
 
@@ -491,9 +491,9 @@ function step() {
 	updateStepButtons();
 	
 	setTimeout(() => {
-		if (env.model.collision) checkCollisions();
 		updateAccelerations();
 		updatePositions();
+		if (env.model.collision) checkCollisions();
 		env.playback.step += 1;
 		
 		env.playback.stepInProgress = false;
@@ -528,6 +528,12 @@ function draw() {
 	forEachSphere(sphere => {
 		sphere.draw();
 	});
+}
+
+function beforeMain() {
+	if (env.model.collision) checkCollisions();
+	checkFocus();
+	draw();
 }
 
 function main(timestamp) {
