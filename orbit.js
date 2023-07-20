@@ -388,7 +388,7 @@ function updatePositions() {
 }
 
 function checkCollisions() {
-	const binSize = getAutoFocusTarget().radius; // use largest radius as bin size
+	const binSize = 2 * getAutoFocusTarget().radius; // use largest radius for bin size
 	const bins = {};
 	
 	forEachSphere(sphere => {
