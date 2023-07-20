@@ -99,6 +99,9 @@ const env = {
 		collision: true,
 		trailLength: 0,
 		processLimit: 1000
+		// processLimit represents how many spheres the system could comfortably handle
+		// this is used to limit how many pairs of spheres will have their forces calculated
+		// processLimit is also dynamically changed based on FPS
 	},
 	playback: {
 		step: {
