@@ -89,7 +89,8 @@ const env = {
 		spheres: {},
 		gravity: 0.1, // gravitational constant
 		collision: true,
-		trailLength: 0
+		trailLength: 0,
+		processLimit: 1000
 	},
 	playback: {
 		time: 0,
@@ -333,9 +334,11 @@ function forEachSphere(fn) {
 }
 
 function updateAccelerations() {
-	const list = Object.values(env.model.spheres);
+	const list = Object.values(env.model.spheres).sort((a,b) => b.radius - a.radius);
+	const pairsLimit = numPairs(env.model.processLimit);
+	const bound = revNumPairs(list.length, pairsLimit);
 	
-	for (let subjectIdx = 0; subjectIdx < list.length - 1; subjectIdx++) {
+	for (let subjectIdx = 0; subjectIdx < bound; subjectIdx++) {
 		const subject = list[subjectIdx];
 		if (subjectIdx === 0) subject.acceleration = [0,0]; // reset acceleration on first pass
 		
@@ -353,6 +356,22 @@ function updateAccelerations() {
 			object.acceleration = vecAdd(object.acceleration, acc2);
 		}
 	}
+}
+
+// Returns the number of iterations in the following loop system:
+// for (let i = 0; i < k; i++)
+// 	for (let j = i+1; j < n; j++)
+function numPairs(n, k = n) {
+	if (n === 0) return 0;
+	return (n-1) * n / 2 - numPairs(n-k);
+}
+
+// Returns greatest k such that numPairs(n, k) <= p
+function revNumPairs(n, p) {
+	const a = 2*n-1;
+	const r = a**2 - 8*p;
+	if (r < 0) return n-1;
+	return Math.floor(0.5 * (a - Math.sqrt(a**2 - 8*p)));
 }
 
 function updatePositions() {
