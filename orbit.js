@@ -94,10 +94,12 @@ const env = {
 		processLimit: 1000
 	},
 	playback: {
-		step: 0,
-		stepInProgress: false,
-		lastStepTime: 0,
-		lastStepDuration: 0,
+		step: {
+			index: 0,
+			inProgress: false,
+			lastStart: 0,
+			lastDuration: 0
+		},
 		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
@@ -268,7 +270,7 @@ class Sphere extends Drawable {
 		
 		// Draw/update trail
 		this.trail = this.trail.filter(marker => {
-			if (marker.birthStep < env.playback.step - env.model.trailLength) {
+			if (marker.birthStep < env.playback.step.index - env.model.trailLength) {
 				marker.deregister();
 				return false;
 			} else {
@@ -284,7 +286,7 @@ class TrailMarker extends Drawable {
 	
 	static SIZE = 2;
 	sphere;
-	birthStep = env.playback.step;
+	birthStep = env.playback.step.index;
 	
 	constructor(sphere) {
 		super();
@@ -489,17 +491,17 @@ function getScreenCentre() {
 
 function step() {
 	const t = timer('step');
-	env.playback.stepInProgress = true;
+	env.playback.step.inProgress = true;
 	updateStepButtons();
 	
 	setTimeout(() => {
 		updateAccelerations();
 		updatePositions();
 		if (env.model.collision) checkCollisions();
-		env.playback.step += 1;
+		env.playback.step.index += 1;
 		
-		env.playback.stepInProgress = false;
-		env.playback.lastStepDuration = t.stop();
+		env.playback.step.inProgress = false;
+		env.playback.step.lastDuration = t.stop();
 		updateStepButtons();
 	}, 0);
 }
@@ -540,8 +542,8 @@ function beforeMain() {
 }
 
 function main(timestamp) {
-	if (!env.playback.paused && !env.playback.stepInProgress && env.playback.lastStepTime + env.playback.speed <= timestamp) {
-		env.playback.lastStepTime = timestamp;
+	if (!env.playback.paused && !env.playback.step.inProgress && env.playback.step.lastStart + env.playback.speed <= timestamp) {
+		env.playback.step.lastStart = timestamp;
 		step();
 	}
 	checkFocus();
@@ -566,8 +568,8 @@ function updateButtons() {
 }
 
 function updateStepButtons() {
-	document.getElementById("playButton").setAttribute("disabled", env.playback.stepInProgress);
-	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused || env.playback.stepInProgress);
+	document.getElementById("playButton").setAttribute("disabled", env.playback.step.inProgress);
+	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused || env.playback.step.inProgress);
 }
 
 
