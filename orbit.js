@@ -87,6 +87,7 @@ const constants = {
 const env = {
 	model: {
 		spheres: {},
+		numSpheres: 0,
 		gravity: 0.1, // gravitational constant
 		collision: true,
 		trailLength: 0,
@@ -195,6 +196,7 @@ class Sphere extends Drawable {
 		this.velocity = velocity || [0, 0];
 		
 		env.model.spheres[this.name] = this;
+		env.model.numSpheres++;
 	}
 	
 	makeElement() {
@@ -237,6 +239,7 @@ class Sphere extends Drawable {
 	remove() {
 		super.deregister();
 		delete env.model.spheres[this.name];
+		env.model.numSpheres--;
 	}
 	
 	getMass() {
@@ -419,8 +422,6 @@ function updatePositions() {
 function checkCollisions() {
 	const binWidth = getAutoFocusTarget().radius + 1; // use largest radius for bin size
 	
-	
-	
 	binByLocation(binWidth, (bin, region) => {
 		// We need to compare the inside of the bin to itself and to it's neighbours
 		// but we don't need to compare neighbours to themselves or other neighbours, that'll be done in a separate bin
@@ -449,7 +450,7 @@ function combine(a, b) {
 	}
 	
 	let color = blend(a.color, b.color, a.getMass(), b.getMass());
-	color = blend(color, Color.yellow, Object.values(env.model.spheres).length, 1);
+	color = blend(color, Color.yellow, env.model.numSpheres, 1);
 	const x = weightedAverage(a.position[0], b.position[0], a.getMass(), b.getMass());
 	const y = weightedAverage(a.position[1], b.position[1], a.getMass(), b.getMass());
 	const u = weightedAverage(a.velocity[0], b.velocity[0], a.getMass(), b.getMass());
