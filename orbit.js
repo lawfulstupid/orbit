@@ -364,6 +364,10 @@ function binByLocation(binSize, processor) {
 }
 
 function updateAccelerations() {
+	updateAccelerationsProcessLimited();
+}
+
+function updateAccelerationsProcessLimited() {
 	const list = Object.values(env.model.spheres).sort(sortOn(s => -s.radius));
 	const pairsLimit = numPairs(env.model.processLimit);
 	const bound = revNumPairs(list.length, pairsLimit);
