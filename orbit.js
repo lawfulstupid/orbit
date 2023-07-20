@@ -496,7 +496,6 @@ function getScreenCentre() {
 }
 
 function step() {
-	const t = timer('step');
 	env.playback.step.inProgress = true;
 	updateStepButtons();
 	
@@ -507,7 +506,7 @@ function step() {
 		env.playback.step.index += 1;
 		
 		env.playback.step.inProgress = false;
-		env.playback.step.lastDuration = t.stop();
+		env.playback.step.lastDuration = window.performance.now() - env.playback.step.lastStart;
 		updateStepButtons();
 	}, 0);
 }
