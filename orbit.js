@@ -70,8 +70,8 @@ function alterTrailLength(diff) {
 const constants = {
 	model: {
 		processLimit: {
-			min: 500,
-			max: 1000000,
+			min: () => Math.floor(5 * Math.sqrt(env.model.numSpheres)),
+			max: 1000000000,
 			factor: 1.5
 		}
 	},
@@ -98,7 +98,7 @@ const env = {
 		gravity: 0.1, // gravitational constant
 		collision: true,
 		trailLength: 0,
-		processLimit: constants.model.processLimit.min
+		processLimit: 1000
 	},
 	playback: {
 		step: {
@@ -560,7 +560,7 @@ function processLimitAdjustment() {
 	let newLimit = env.model.processLimit;
 	
 	if (q >= 1) {
-		newLimit = Math.max(constants.model.processLimit.min, Math.floor(env.model.processLimit / constants.model.processLimit.factor));
+		newLimit = Math.max(constants.model.processLimit.min(), Math.floor(env.model.processLimit / constants.model.processLimit.factor));
 	} else if (q < 0.5) {
 		newLimit = Math.min(constants.model.processLimit.max, Math.floor(env.model.processLimit * constants.model.processLimit.factor));
 	}
