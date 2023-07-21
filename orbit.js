@@ -589,7 +589,7 @@ function beforeMain() {
 }
 
 function processLimitAdjustment() {
-	const q = env.playback.step.lastDuration / env.playback.frame.lastDuration;
+	const q = env.playback.step.lastDuration / (1000 / 60);
 	let newLimit = env.model.processLimit;
 	
 	if (q >= 1) {
