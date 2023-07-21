@@ -64,17 +64,24 @@ function alterTrailLength(diff) {
 	updateButtons();
 }
 
+function scheduleStep() {
+	env.playback.step.queue();
+	updateStepButtons();
+}
+
 
 /* MODEL */
 
 class TimeUnit {
 	index = 0;
 	inProgress = false;
+	delay = undefined;
 	lastStart = 0;
 	lastDuration = 0;
 	
 	start() {
 		this.inProgress = true;
+		this.delay = undefined;
 		this.index++;
 		this.lastStart = window.performance.now();
 	}
@@ -82,6 +89,22 @@ class TimeUnit {
 	end() {
 		this.lastDuration = window.performance.now() - this.lastStart;
 		this.inProgress = false;
+	}
+	
+	queue() {
+		this.delay = 1;
+	}
+	
+	checkQueue() {
+		if (this.delay === undefined) {
+			return false;
+		} else {
+			return this.delay-- === 0;
+		}
+	}
+	
+	canQueue() {
+		return (this.delay === undefined) && !this.inProgress;
 	}
 }
 
@@ -522,16 +545,10 @@ function getScreenCentre() {
 
 function step() {
 	env.playback.step.start();
-	updateStepButtons();
-	
-	setTimeout(() => {
-		updateAccelerations();
-		updatePositions();
-		if (env.model.collision) checkCollisions();
-		
-		env.playback.step.end();
-		updateStepButtons();
-	}, 0);
+	updateAccelerations();
+	updatePositions();
+	if (env.model.collision) checkCollisions();
+	env.playback.step.end();
 }
 
 function checkFocus() {
@@ -588,17 +605,20 @@ function processLimitAdjustment() {
 }
 
 function main(timestamp) {
-	env.playback.frame.end();
 	env.playback.frame.start();
 	
-	if (!env.playback.paused && !env.playback.step.inProgress && env.playback.step.lastStart + env.playback.speed <= timestamp) {
-		processLimitAdjustment();
+	if (env.playback.paused ? env.playback.step.checkQueue() : !env.playback.step.inProgress && env.playback.step.lastStart + env.playback.speed <= timestamp) {
 		step();
+		processLimitAdjustment();
 	}
 	checkFocus();
 	draw();
+	updateStepButtons();
 	
-	window.requestAnimationFrame(main);
+	window.requestAnimationFrame(ts => {
+		env.playback.frame.end();
+		main(ts);
+	});
 }
 
 function updateButtons() {
@@ -618,8 +638,8 @@ function updateButtons() {
 }
 
 function updateStepButtons() {
-	document.getElementById("playButton").setAttribute("disabled", env.playback.step.inProgress);
-	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused || env.playback.step.inProgress);
+	document.getElementById("playButton").setAttribute("disabled", !env.playback.step.canQueue());
+	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused || !env.playback.step.canQueue());
 }
 
 
