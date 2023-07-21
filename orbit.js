@@ -74,6 +74,27 @@ function scheduleStep() {
 	updateStepButtons();
 }
 
+function updateButtons() {
+	updateStepButtons();
+	document.getElementById("pauseButton").setAttribute("hidden", env.playback.paused);
+	document.getElementById("playButton").setAttribute("hidden", !env.playback.paused);
+	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === -constants.playback.speed.limit);
+	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === 0);
+	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.limit);
+	document.getElementById("autoFocusButton").setAttribute("hidden", env.playback.autofocus);
+	document.getElementById("manualFocusButton").setAttribute("hidden", !env.playback.autofocus);
+	document.getElementById("resetZoomButton").setAttribute("disabled", env.screen.scale === constants.screen.scale.default);
+	document.getElementById("enableCollisionsButton").setAttribute("hidden", env.model.collision);
+	document.getElementById("disableCollisionsButton").setAttribute("hidden", !env.model.collision);
+	document.getElementById("decreaseTrailButton").setAttribute("disabled", env.model.trailLength === 0);
+	document.getElementById("trailLength").innerHTML = env.model.trailLength;
+}
+
+function updateStepButtons() {
+	document.getElementById("playButton").setAttribute("disabled", !env.playback.step.canQueue());
+	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused || !env.playback.step.canQueue());
+}
+
 
 /* MODEL */
 
@@ -559,11 +580,57 @@ function combine(a, b) {
 	return [a,b];
 }
 
+function processLimitAdjustment() {
+	const q = env.playback.update.lastDuration / (1000 / 60);
+	let newLimit = env.model.processLimit;
+	
+	if (q >= 1) {
+		newLimit = Math.max(constants.model.processLimit.min(), Math.floor(env.model.processLimit / constants.model.processLimit.factor));
+	} else if (q < 0.5) {
+		newLimit = Math.min(constants.model.processLimit.max, Math.floor(env.model.processLimit * constants.model.processLimit.factor));
+	}
+	
+	if (newLimit !== env.model.processLimit) {
+		console.log('New Process Limit:', newLimit);
+		env.model.processLimit = newLimit;
+	}
+}
+
 
 /* APPLICATION */
 
-function getScreenCentre() {
-	return [window.innerWidth / 2, window.innerHeight / 2];
+function beforeMain() {
+	if (env.model.collision) checkCollisions();
+	checkFocus();
+	draw();
+}
+
+function main(timestamp) {
+	env.playback.frame.start();
+	
+	if (env.playback.paused && env.playback.step.checkQueue()) {
+		step();
+	} else if (!env.playback.paused && !env.playback.update.inProgress && env.playback.frame.index % env.playback.framesPerUpdate === 0) {
+		update();
+	}
+	
+	checkFocus();
+	draw();
+	updateStepButtons();
+	
+	window.requestAnimationFrame(ts => {
+		env.playback.frame.end();
+		main(ts);
+	});
+}
+
+function update() {
+	env.playback.update.start();
+	for (let i = 0; i < env.playback.stepsPerUpdate; i++) {
+		step();
+	}
+	env.playback.update.end();
+	processLimitAdjustment();
 }
 
 function step() {
@@ -572,6 +639,10 @@ function step() {
 	updatePositions();
 	if (env.model.collision) checkCollisions();
 	env.playback.step.end();
+}
+
+function getScreenCentre() {
+	return [window.innerWidth / 2, window.innerHeight / 2];
 }
 
 function checkFocus() {
@@ -603,77 +674,6 @@ function draw() {
 	});
 	
 	document.getElementById("fpsDisplay").innerHTML = Math.round(1000 / env.playback.frame.avgDuration);
-}
-
-function beforeMain() {
-	if (env.model.collision) checkCollisions();
-	checkFocus();
-	draw();
-}
-
-function processLimitAdjustment() {
-	const q = env.playback.update.lastDuration / (1000 / 60);
-	let newLimit = env.model.processLimit;
-	
-	if (q >= 1) {
-		newLimit = Math.max(constants.model.processLimit.min(), Math.floor(env.model.processLimit / constants.model.processLimit.factor));
-	} else if (q < 0.5) {
-		newLimit = Math.min(constants.model.processLimit.max, Math.floor(env.model.processLimit * constants.model.processLimit.factor));
-	}
-	
-	if (newLimit !== env.model.processLimit) {
-		console.log('New Process Limit:', newLimit);
-		env.model.processLimit = newLimit;
-	}
-}
-
-function update() {
-	env.playback.update.start();
-	for (let i = 0; i < env.playback.stepsPerUpdate; i++) {
-		step();
-	}
-	env.playback.update.end();
-	processLimitAdjustment();
-}
-
-function main(timestamp) {
-	env.playback.frame.start();
-	
-	if (env.playback.paused && env.playback.step.checkQueue()) {
-		step();
-	} else if (!env.playback.paused && !env.playback.update.inProgress && env.playback.frame.index % env.playback.framesPerUpdate === 0) {
-		update();
-	}
-	
-	checkFocus();
-	draw();
-	updateStepButtons();
-	
-	window.requestAnimationFrame(ts => {
-		env.playback.frame.end();
-		main(ts);
-	});
-}
-
-function updateButtons() {
-	updateStepButtons();
-	document.getElementById("pauseButton").setAttribute("hidden", env.playback.paused);
-	document.getElementById("playButton").setAttribute("hidden", !env.playback.paused);
-	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === -constants.playback.speed.limit);
-	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === 0);
-	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.limit);
-	document.getElementById("autoFocusButton").setAttribute("hidden", env.playback.autofocus);
-	document.getElementById("manualFocusButton").setAttribute("hidden", !env.playback.autofocus);
-	document.getElementById("resetZoomButton").setAttribute("disabled", env.screen.scale === constants.screen.scale.default);
-	document.getElementById("enableCollisionsButton").setAttribute("hidden", env.model.collision);
-	document.getElementById("disableCollisionsButton").setAttribute("hidden", !env.model.collision);
-	document.getElementById("decreaseTrailButton").setAttribute("disabled", env.model.trailLength === 0);
-	document.getElementById("trailLength").innerHTML = env.model.trailLength;
-}
-
-function updateStepButtons() {
-	document.getElementById("playButton").setAttribute("disabled", !env.playback.step.canQueue());
-	document.getElementById("stepButton").setAttribute("disabled", !env.playback.paused || !env.playback.step.canQueue());
 }
 
 
