@@ -43,7 +43,6 @@ function alterSpeed(dir) {
 	
 	env.playback.stepsPerUpdate = Math.max(1, Math.ceil(constants.playback.speed.factor ** env.playback.speed));
 	env.playback.framesPerUpdate = Math.max(1, Math.ceil(constants.playback.speed.factor ** -env.playback.speed));
-	console.log(env.playback.framesPerUpdate, env.playback.stepsPerUpdate);
 	
 	updateButtons();
 }
@@ -381,6 +380,7 @@ const env = {
 		numSpheres: 0,
 		gravity: 0.1, // gravitational constant
 		collision: true,
+		cullEscapees: true,
 		trailLength: 0,
 		processLimit: 1000
 		// processLimit represents how many spheres the system could comfortably handle
@@ -580,6 +580,25 @@ function combine(a, b) {
 	return [a,b];
 }
 
+function checkEscapees() {
+	let totalPos = [0,0];
+	let totalMass = 0;
+	forEachSphere(sphere => {
+		totalPos = vecAdd(totalPos, vecMul(sphere.getMass(), sphere.position));
+		totalMass += sphere.getMass();
+	});
+	
+	forEachSphere(sphere => {
+		const centralMass = totalMass - sphere.getMass()
+		const centralPos = vecMul(1/centralMass, vecSub(totalPos, vecMul(sphere.getMass(), sphere.position)));
+		const d = dist(centralPos, sphere.position);
+		const escapeVelocity = Math.sqrt(2 * env.model.gravity * centralMass / d);
+		if (norm(sphere.velocity) > 2 * escapeVelocity) {
+			if (!sphere.element) sphere.remove(); // remove if off-screen
+		}
+	});
+}
+
 function adjustProcessLimit() {
 	const q = env.playback.update.lastDuration / (1000 / 60);
 	let newLimit = env.model.processLimit;
@@ -638,6 +657,7 @@ function step() {
 	updateAccelerations();
 	updatePositions();
 	if (env.model.collision) checkCollisions();
+	if (env.model.cullEscapees) checkEscapees();
 	env.playback.step.end();
 }
 
