@@ -73,11 +73,28 @@ function scheduleStep() {
 /* MODEL */
 
 class TimeUnit {
+	static ROLLING_AVG_PERIOD = 5;
+	
 	index = 0;
 	inProgress = false;
 	delay = undefined;
 	lastStart = 0;
-	lastDuration = 0;
+	durations = [];
+	
+	get lastDuration() {
+		return this.durations[this.durations.length - 1];
+	}
+	
+	set lastDuration(dur) {
+		this.durations.push(dur);
+		if (this.durations.length > TimeUnit.ROLLING_AVG_PERIOD) {
+			this.durations.splice(0, 1);
+		}
+	}
+	
+	get avgDuration() {
+		return this.durations.reduce((s,x) => s + x, 0) / this.durations.length;
+	}
 	
 	start() {
 		this.inProgress = true;
@@ -580,7 +597,7 @@ function draw() {
 		sphere.draw();
 	});
 	
-	document.getElementById("fpsDisplay").innerHTML = (1000 / Math.max(env.playback.step.lastDuration, env.playback.frame.lastDuration)).toFixed(2);
+	document.getElementById("fpsDisplay").innerHTML = Math.round(1000 / env.playback.frame.avgDuration);
 }
 
 function beforeMain() {
