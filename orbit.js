@@ -98,110 +98,6 @@ function updateStepButtons() {
 
 /* MODEL */
 
-class TimeUnit {
-	static ROLLING_AVG_PERIOD = 5;
-	
-	index = 0;
-	inProgress = false;
-	delay = undefined;
-	lastStart = 0;
-	durations = [];
-	
-	get lastDuration() {
-		return this.durations[this.durations.length - 1];
-	}
-	
-	set lastDuration(dur) {
-		this.durations.push(dur);
-		if (this.durations.length > TimeUnit.ROLLING_AVG_PERIOD) {
-			this.durations.splice(0, 1);
-		}
-	}
-	
-	get avgDuration() {
-		return this.durations.reduce((s,x) => s + x, 0) / this.durations.length;
-	}
-	
-	start() {
-		this.inProgress = true;
-		this.delay = undefined;
-		this.index++;
-		this.lastStart = window.performance.now();
-	}
-	
-	end() {
-		this.lastDuration = window.performance.now() - this.lastStart;
-		this.inProgress = false;
-	}
-	
-	queue() {
-		this.delay = 1;
-	}
-	
-	checkQueue() {
-		if (this.delay === undefined) {
-			return false;
-		} else {
-			return this.delay-- === 0;
-		}
-	}
-	
-	canQueue() {
-		return (this.delay === undefined) && !this.inProgress;
-	}
-}
-
-const constants = {
-	model: {
-		processLimit: {
-			min: () => Math.floor(2 * Math.sqrt(env.model.numSpheres)),
-			max: () => env.model.numSpheres,
-			factor: 1.5
-		}
-	},
-	playback: {
-		speed: {
-			limit: 8,
-			factor: 1.666
-		}
-	},
-	screen: {
-		scale: {
-			default: 1,
-			factor: 1.5
-		}
-	}
-}
-
-const env = {
-	model: {
-		spheres: {},
-		numSpheres: 0,
-		gravity: 0.1, // gravitational constant
-		collision: true,
-		trailLength: 0,
-		processLimit: 1000
-		// processLimit represents how many spheres the system could comfortably handle
-		// this is used to limit how many pairs of spheres will have their forces calculated
-		// processLimit is also dynamically changed based on FPS
-	},
-	playback: {
-		step: new TimeUnit(),
-		update: new TimeUnit(),
-		frame: new TimeUnit(),
-		speed: 0, // === stepsPerUpdate - framesPerUpdate
-		stepsPerUpdate: 1,
-		framesPerUpdate: 1,
-		paused: false,
-		focus: null,
-		autofocus: false
-	},
-	screen: {
-		centre: [0, 0],
-		scale: constants.screen.scale.default // >1 => zoomed in1, <1 => zoomed out
-	}
-}
-
 class Drawable {
 	position;
 	element;
@@ -402,6 +298,110 @@ class TrailMarker extends Drawable {
 		return TrailMarker.SIZE;
 	}
 	
+}
+
+class TimeUnit {
+	static ROLLING_AVG_PERIOD = 5;
+	
+	index = 0;
+	inProgress = false;
+	delay = undefined;
+	lastStart = 0;
+	durations = [];
+	
+	get lastDuration() {
+		return this.durations[this.durations.length - 1];
+	}
+	
+	set lastDuration(dur) {
+		this.durations.push(dur);
+		if (this.durations.length > TimeUnit.ROLLING_AVG_PERIOD) {
+			this.durations.splice(0, 1);
+		}
+	}
+	
+	get avgDuration() {
+		return this.durations.reduce((s,x) => s + x, 0) / this.durations.length;
+	}
+	
+	start() {
+		this.inProgress = true;
+		this.delay = undefined;
+		this.index++;
+		this.lastStart = window.performance.now();
+	}
+	
+	end() {
+		this.lastDuration = window.performance.now() - this.lastStart;
+		this.inProgress = false;
+	}
+	
+	queue() {
+		this.delay = 1;
+	}
+	
+	checkQueue() {
+		if (this.delay === undefined) {
+			return false;
+		} else {
+			return this.delay-- === 0;
+		}
+	}
+	
+	canQueue() {
+		return (this.delay === undefined) && !this.inProgress;
+	}
+}
+
+const constants = {
+	model: {
+		processLimit: {
+			min: () => Math.floor(2 * Math.sqrt(env.model.numSpheres)),
+			max: () => env.model.numSpheres,
+			factor: 1.5
+		}
+	},
+	playback: {
+		speed: {
+			limit: 8,
+			factor: 1.666
+		}
+	},
+	screen: {
+		scale: {
+			default: 1,
+			factor: 1.5
+		}
+	}
+}
+
+const env = {
+	model: {
+		spheres: {},
+		numSpheres: 0,
+		gravity: 0.1, // gravitational constant
+		collision: true,
+		trailLength: 0,
+		processLimit: 1000
+		// processLimit represents how many spheres the system could comfortably handle
+		// this is used to limit how many pairs of spheres will have their forces calculated
+		// processLimit is also dynamically changed based on FPS
+	},
+	playback: {
+		step: new TimeUnit(),
+		update: new TimeUnit(),
+		frame: new TimeUnit(),
+		speed: 0, // === stepsPerUpdate - framesPerUpdate
+		stepsPerUpdate: 1,
+		framesPerUpdate: 1,
+		paused: false,
+		focus: null,
+		autofocus: false
+	},
+	screen: {
+		centre: [0, 0],
+		scale: constants.screen.scale.default // >1 => zoomed in1, <1 => zoomed out
+	}
 }
 
 function getSphere(sphere) {
