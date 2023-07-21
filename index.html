@@ -15,9 +15,9 @@
 		<i id="playButton" class="fas fa-play" onclick="playPause()" title="Play"></i>
 		<i id="stepButton" class="fas fa-step-forward" onclick="scheduleStep()" title="Step Forward"></i>
 		<span class="separator"></span>
-		<i id="slowButton" class="fas fa-backward" onclick="alterSpeed(1)" title="Slower"></i>
+		<i id="slowButton" class="fas fa-backward" onclick="alterSpeed(-1)" title="Slower"></i>
 		<i id="resetSpeedButton" class="fas fa-rotate-left" onclick="alterSpeed(0)" title="Reset Speed"></i>
-		<i id="fastButton" class="fas fa-forward" onclick="alterSpeed(-1)" title="Faster"></i>
+		<i id="fastButton" class="fas fa-forward" onclick="alterSpeed(1)" title="Faster"></i>
 		<span class="separator"></span>
 		<i id="autoFocusButton" class="fas fa-arrows-to-eye" onclick="setFocus('auto')" title="Auto-Focus On Largest Sphere"></i>
 		<i id="manualFocusButton" class="fas fa-hand-pointer" onclick="setFocus('manual')" title="Manual Focus (click to select sphere)"></i>
