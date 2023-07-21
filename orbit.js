@@ -639,7 +639,7 @@ function main(timestamp) {
 	
 	if (env.playback.paused && env.playback.step.checkQueue()) {
 		step();
-	} else if (!env.playback.paused && !env.playback.update.inProgress) {
+	} else if (!env.playback.paused && !env.playback.update.inProgress && env.playback.frame.index % env.playback.framesPerUpdate === 0) {
 		update();
 	}
 	
