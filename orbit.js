@@ -41,8 +41,9 @@ function alterSpeed(dir) {
 		}
 	}
 	
-	env.playback.stepsPerUpdate = 1 + Math.max(0, env.playback.speed);
-	env.playback.framesPerUpdate = 1 + Math.max(0, -env.playback.speed);
+	env.playback.stepsPerUpdate = Math.max(1, Math.ceil(constants.playback.speed.factor ** env.playback.speed));
+	env.playback.framesPerUpdate = Math.max(1, Math.ceil(constants.playback.speed.factor ** -env.playback.speed));
+	console.log(env.playback.framesPerUpdate, env.playback.stepsPerUpdate);
 	
 	updateButtons();
 }
@@ -139,7 +140,8 @@ const constants = {
 	},
 	playback: {
 		speed: {
-			limit: 4
+			limit: 8,
+			factor: 1.666
 		}
 	},
 	screen: {
