@@ -33,13 +33,17 @@ function playPause() {
 
 function alterSpeed(dir) {
 	if (dir === 0) {
-		env.playback.speed = constants.playback.speed.default;
+		env.playback.speed = 0;
 	} else {
-		const idx = constants.playback.speed.array.findIndex(speed => speed === env.playback.speed);
-		const oldSpeed = env.playback.speed;
-		env.playback.speed = constants.playback.speed.array.at(idx + dir);
-		if (env.playback.speed === undefined) env.playback.speed = oldSpeed;
+		env.playback.speed += dir
+		if (Math.abs(env.playback.speed) > constants.playback.speed.limit) {
+			env.playback.speed = Math.sign(env.playback.speed) * constants.playback.speed.limit;
+		}
 	}
+	
+	env.playback.stepsPerUpdate = 1 + Math.max(0, env.playback.speed);
+	env.playback.framesPerUpdate = 1 + Math.max(0, -env.playback.speed);
+	
 	updateButtons();
 }
 
@@ -135,10 +139,7 @@ const constants = {
 	},
 	playback: {
 		speed: {
-			default: 1,
-			min: 1,
-			max: 5,
-			array: [1, 2, 3, 4, 5]
+			limit: 4
 		}
 	},
 	screen: {
@@ -165,7 +166,9 @@ const env = {
 		step: new TimeUnit(),
 		update: new TimeUnit(),
 		frame: new TimeUnit(),
-		speed: constants.playback.speed.default, // target steps per frame
+		speed: 0, // === stepsPerUpdate - framesPerUpdate
+		stepsPerUpdate: 1,
+		framesPerUpdate: 1,
 		paused: false,
 		focus: null,
 		autofocus: false
@@ -624,7 +627,7 @@ function processLimitAdjustment() {
 
 function update() {
 	env.playback.update.start();
-	for (let i = 0; i < env.playback.speed; i++) {
+	for (let i = 0; i < env.playback.stepsPerUpdate; i++) {
 		step();
 	}
 	env.playback.update.end();
@@ -654,9 +657,9 @@ function updateButtons() {
 	updateStepButtons();
 	document.getElementById("pauseButton").setAttribute("hidden", env.playback.paused);
 	document.getElementById("playButton").setAttribute("hidden", !env.playback.paused);
-	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.min);
-	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.default);
-	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.max);
+	document.getElementById("slowButton").setAttribute("disabled", env.playback.speed === -constants.playback.speed.limit);
+	document.getElementById("resetSpeedButton").setAttribute("disabled", env.playback.speed === 0);
+	document.getElementById("fastButton").setAttribute("disabled", env.playback.speed === constants.playback.speed.limit);
 	document.getElementById("autoFocusButton").setAttribute("hidden", env.playback.autofocus);
 	document.getElementById("manualFocusButton").setAttribute("hidden", !env.playback.autofocus);
 	document.getElementById("resetZoomButton").setAttribute("disabled", env.screen.scale === constants.screen.scale.default);
