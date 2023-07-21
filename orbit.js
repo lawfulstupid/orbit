@@ -185,6 +185,7 @@ class Sphere extends Drawable {
 		
 		env.model.spheres[this.name] = this;
 		env.model.numSpheres++;
+		env.model.totalMass += this.getMass();
 	}
 	
 	makeElement() {
@@ -232,6 +233,10 @@ class Sphere extends Drawable {
 	
 	getMass() {
 		return this.radius ** 3;
+	}
+	
+	getWeightedPosition() {
+		return vecMul(this.getMass(), this.position);
 	}
 	
 	getCornerCoords() {
@@ -378,6 +383,7 @@ const env = {
 	model: {
 		spheres: {},
 		numSpheres: 0,
+		totalMass: 0,
 		gravity: 0.1, // gravitational constant
 		collision: true,
 		cullEscapees: true,
@@ -581,20 +587,20 @@ function combine(a, b) {
 }
 
 function checkEscapees() {
-	let totalPos = [0,0];
-	let totalMass = 0;
-	forEachSphere(sphere => {
-		totalPos = vecAdd(totalPos, vecMul(sphere.getMass(), sphere.position));
-		totalMass += sphere.getMass();
-	});
+	const totalPos = Object.values(env.model.spheres)
+		.map(sphere => sphere.getWeightedPosition())
+		.reduce(vecAdd, [0,0]);
+	const totalMass = env.model.totalMass;
 	
 	forEachSphere(sphere => {
-		const centralMass = totalMass - sphere.getMass()
-		const centralPos = vecMul(1/centralMass, vecSub(totalPos, vecMul(sphere.getMass(), sphere.position)));
+		if (sphere.element) return; // only remove if off-screen
+		const centralMass = totalMass - sphere.getMass();
+		const centralPos = vecMul(1/centralMass, vecSub(totalPos, sphere.getWeightedPosition()));
 		const d = dist(centralPos, sphere.position);
 		const escapeVelocity = Math.sqrt(2 * env.model.gravity * centralMass / d);
 		if (norm(sphere.velocity) > 2 * escapeVelocity) {
-			if (!sphere.element) sphere.remove(); // remove if off-screen
+			sphere.remove();
+			env.model.totalMass = centralMass;
 		}
 	});
 }
