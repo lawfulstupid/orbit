@@ -67,7 +67,7 @@ function preset5() { // dust cloud
 	// const sun = new Sphere("sun", 200, "yellow");
 	// setFocus("sun");s
 	
-	const numberOfPlanets = onMobile() ? 1000 : 5000;
+	const numberOfPlanets = onMobile() ? 500 : 5000;
 	const minRadius = 2;
 	const maxRadius = 5;
 	const minOrbit = 5;
