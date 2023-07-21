@@ -67,6 +67,24 @@ function alterTrailLength(diff) {
 
 /* MODEL */
 
+class TimeUnit {
+	index = 0;
+	inProgress = false;
+	lastStart = 0;
+	lastDuration = 0;
+	
+	start() {
+		this.inProgress = true;
+		this.index++;
+		this.lastStart = window.performance.now();
+	}
+	
+	end() {
+		this.lastDuration = window.performance.now() - this.lastStart;
+		this.inProgress = false;
+	}
+}
+
 const constants = {
 	model: {
 		processLimit: {
@@ -104,18 +122,8 @@ const env = {
 		// processLimit is also dynamically changed based on FPS
 	},
 	playback: {
-		step: {
-			index: 0,
-			inProgress: false,
-			lastStart: 0,
-			lastDuration: 0
-		},
-		frame: {
-			index: 0,
-			inProgress: false,
-			lastStart: 0,
-			lastDuration: 0
-		},
+		step: new TimeUnit(),
+		frame: new TimeUnit(),
 		speed: constants.playback.speed.default,
 		paused: false,
 		focus: null,
@@ -513,17 +521,15 @@ function getScreenCentre() {
 }
 
 function step() {
-	env.playback.step.inProgress = true;
+	env.playback.step.start();
 	updateStepButtons();
 	
 	setTimeout(() => {
 		updateAccelerations();
 		updatePositions();
 		if (env.model.collision) checkCollisions();
-		env.playback.step.index += 1;
 		
-		env.playback.step.inProgress = false;
-		env.playback.step.lastDuration = window.performance.now() - env.playback.step.lastStart;
+		env.playback.step.end();
 		updateStepButtons();
 	}, 0);
 }
@@ -582,20 +588,16 @@ function processLimitAdjustment() {
 }
 
 function main(timestamp) {
-	env.playback.frame.inProgress = true;
-	env.playback.frame.index++;
-	env.playback.frame.lastDuration = timestamp - env.playback.frame.lastStart;
-	env.playback.frame.lastStart = timestamp;
+	env.playback.frame.end();
+	env.playback.frame.start();
 	
 	if (!env.playback.paused && !env.playback.step.inProgress && env.playback.step.lastStart + env.playback.speed <= timestamp) {
-		env.playback.step.lastStart = timestamp;
 		processLimitAdjustment();
 		step();
 	}
 	checkFocus();
 	draw();
 	
-	env.playback.frame.inProgress = false;
 	window.requestAnimationFrame(main);
 }
 
