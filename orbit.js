@@ -155,7 +155,7 @@ const constants = {
 	model: {
 		processLimit: {
 			min: () => Math.floor(2 * Math.sqrt(env.model.numSpheres)),
-			max: 1000000000,
+			max: () => env.model.numSpheres,
 			factor: 1.5
 		}
 	},
@@ -587,7 +587,7 @@ function adjustProcessLimit() {
 	if (q >= 1) {
 		newLimit = Math.max(constants.model.processLimit.min(), Math.floor(env.model.processLimit / constants.model.processLimit.factor));
 	} else if (q < 0.5) {
-		newLimit = Math.min(constants.model.processLimit.max, Math.floor(env.model.processLimit * constants.model.processLimit.factor));
+		newLimit = Math.min(constants.model.processLimit.max(), Math.floor(env.model.processLimit * constants.model.processLimit.factor));
 	}
 	
 	if (newLimit !== env.model.processLimit) {
