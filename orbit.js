@@ -580,7 +580,7 @@ function combine(a, b) {
 	return [a,b];
 }
 
-function processLimitAdjustment() {
+function adjustProcessLimit() {
 	const q = env.playback.update.lastDuration / (1000 / 60);
 	let newLimit = env.model.processLimit;
 	
@@ -630,7 +630,7 @@ function update() {
 		step();
 	}
 	env.playback.update.end();
-	processLimitAdjustment();
+	adjustProcessLimit();
 }
 
 function step() {
