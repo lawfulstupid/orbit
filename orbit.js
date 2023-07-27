@@ -279,6 +279,91 @@ class Sphere extends Drawable {
 	}
 }
 
+class QuadTree {
+	left;
+	top;
+	size;
+	totalMass;
+	totalWeightedPosition;
+	quadrants;
+	
+	constructor(spheres, left, top, size) {
+		this.left = left;
+		this.top = top;
+		this.size = size;
+		if (spheres.length <= 1) {
+			this.totalMass = totalMass(spheres);
+			this.totalWeightedPosition = totalWeightedPosition(spheres);
+		} else {
+			const midSize = size/2;
+			const xMid = left + midSize;
+			const yMid = top + midSize;
+			
+			const northWest = [];
+			const northEast = [];
+			const southWest = [];
+			const southEast = [];
+			
+			spheres.forEach(sphere => {
+				if (sphere.position[0] <= xMid) { // west
+					if (sphere.position[1] <= yMid) { // north
+						northWest.push(sphere);
+					} else { // south
+						southWest.push(sphere);
+					}
+				} else { // east
+					if (sphere.position[1] <= yMid) { // north
+						northEast.push(sphere);
+					} else { // south
+						southEast.push(sphere);
+					}
+				}
+			});
+			
+			this.quadrants = [
+				new QuadTree(northWest, left, top, midSize),
+				new QuadTree(northEast, xMid, top, midSize),
+				new QuadTree(southWest, left, yMid, midSize),
+				new QuadTree(southEast, xMid, yMid, midSize)
+			];
+			
+			this.totalMass = totalMass(this.quadrants);
+			this.totalWeightedPosition = totalWeightedPosition(this.quadrants);
+		}
+	}
+	
+	get mass() {
+		return this.totalMass;
+	}
+	
+	get position() {
+		if (this.isEmpty()) {
+			return [0,0];
+		} else {
+			return vecMul(1/this.totalMass, this.totalWeightedPosition);
+		}
+	}
+	
+	getWeightedPosition() {
+		return this.totalWeightedPosition;
+	}
+	
+	isTerminal() {
+		return this.quadrants === undefined;
+	}
+	
+	isEmpty() {
+		return this.totalMass === 0;
+	}
+	
+	contains(sphere) {
+		const right = this.left + this.size;
+		const bottom = this.top + this.size;
+		const [x,y] = sphere.position;
+		return this.left <= x && x <= right && this.top <= y && y <= bottom;
+	}
+}
+
 class TrailMarker extends Drawable {
 	static SIZE = 2;
 	sphere;
@@ -363,7 +448,8 @@ class TimeUnit {
 
 const ApproximationStrategy = {
 	None: 'none',
-	ProcessLimiting: 'processLimit'
+	ProcessLimiting: 'processLimit',
+	QuadTree: 'quadTree'
 }
 
 /*
@@ -377,6 +463,11 @@ const ApproximationStrategy = {
  * this is used to limit how many pairs of spheres will have their forces calculated
  * e.g. if processLimit = 100, that would mean a limit of 4950 comparisons.
  * Complexity: O(processLimit^2)
+ *
+ * QuadTree:
+ * Implementation of the Barnes-Hut algorithm,
+ * using env.approximation.barnesHutThreshold as the theta-value.
+ * Complexity: O(N log N)
  */
 
 const constants = {
@@ -385,6 +476,10 @@ const constants = {
 			min: () => Math.floor(2 * Math.sqrt(env.model.numSpheres)),
 			max: () => env.model.numSpheres,
 			factor: 1.5
+		},
+		barnesHutThreshold: {
+			min: 0,
+			max: 2
 		}
 	},
 	playback: {
@@ -409,7 +504,8 @@ const env = {
 		gravity: 0.1, // gravitational constant
 		collision: true,
 		cullEscapees: true,
-		trailLength: 0
+		trailLength: 0,
+		autoAdjust: true
 	},
 	playback: {
 		step: new TimeUnit(),
@@ -427,8 +523,9 @@ const env = {
 		scale: constants.screen.scale.default // >1 => zoomed in1, <1 => zoomed out
 	},
 	approximation: {
-		strategy: ApproximationStrategy.ProcessLimiting,
-		processLimit: 1000
+		strategy: ApproximationStrategy.QuadTree,
+		processLimit: 1000,
+		barnesHutThreshold: 0.5
 	}
 }
 
@@ -503,6 +600,9 @@ function updateAccelerations() {
 		case ApproximationStrategy.ProcessLimit:
 			updateAccelerationsProcessLimited();
 			break;
+		case ApproximationStrategy.QuadTree:
+			updateAccelerationsQuadTree();
+			break;
 	}
 }
 
@@ -522,6 +622,63 @@ function updateAccelerationsProcessLimited() {
 			updateAcceleration(subject, object);
 		}
 	}
+}
+
+function updateAccelerationsQuadTree() {
+	let maxDist = 0;
+	forEachSphere(sphere => {
+		sphere.acceleration = [0,0];
+		maxDist = Math.ceil(Math.max(maxDist, Math.abs(sphere.position[0]), Math.abs(sphere.position[1])));
+	});
+	maxDist += 1; // to combat off-by-one errors
+	
+	const tree = new QuadTree(Object.values(env.model.spheres), -maxDist, -maxDist, 2*maxDist);
+	
+	forEachSphere(sphere => {
+		traverseTree(sphere, tree);
+	});
+}
+
+function traverseTree(sphere, treeNode) {
+	if (treeNode.isEmpty()) return;
+	
+	/*
+	FAR vs NEAR: whether the treeNode passes the threshold test
+	TERM(INAL) vs NT (NONTERMINAL)
+	IN(SIDE) vs OUT(SIDE): if the treeNode contains the sphere or not
+	
+	FAR  + NT   + IN  = resolve    // I thought this should be expand but resolve works better
+	FAR  + NT   + OUT = resolve
+	FAR  + TERM + IN  = impossible // won't happen so allow any action
+	FAR  + TERM + OUT = resolve
+	NEAR + NT   + IN  = expand
+	NEAR + NT   + OUT = expand
+	NEAR + TERM + IN  = pass
+	NEAR + TERM + OUT = resolve
+	*/
+	
+	const distanceQuotient = treeNode.size / dist(sphere.position, treeNode.position);
+	const sufficientlyFar = distanceQuotient < env.approximation.barnesHutThreshold;
+	
+	let action;
+	if (sufficientlyFar) {
+		action = 'resolve';
+	} else if (!treeNode.isTerminal()) {
+		action = 'expand';
+	} else if (treeNode.contains(sphere)) {
+		action = 'pass';
+	} else {
+		action = 'resolve';
+	}
+	
+	if (action === 'resolve') {
+		updateAcceleration(treeNode, sphere, false);
+	} else if (action === 'expand') {
+		treeNode.quadrants.forEach(quad => {
+			traverseTree(sphere, quad);
+		});
+	}
+	// do nothing if action === 'pass'
 }
 
 // Generally assumes subject is bigger than object (relevant if mutual = false)
@@ -645,6 +802,17 @@ function checkEscapees() {
 	});
 }
 
+function adjustParameters() {
+	switch (env.approximation.strategy) {
+		case ApproximationStrategy.ProcessLimiting:
+			adjustProcessLimit();
+			break;
+		case ApproximationStrategy.QuadTree:
+			adjustBarnesHutThreshold();
+			break;
+	}
+}
+
 function adjustProcessLimit() {
 	const q = env.playback.update.lastDuration / (1000 / 60);
 	let newLimit = env.approximation.processLimit;
@@ -658,6 +826,22 @@ function adjustProcessLimit() {
 	if (newLimit !== env.approximation.processLimit) {
 		console.log('New Process Limit:', newLimit);
 		env.approximation.processLimit = newLimit;
+	}
+}
+
+function adjustBarnesHutThreshold() {
+	const q = env.playback.update.lastDuration / (1000 / 60);
+	let newThreshold = env.approximation.barnesHutThreshold;
+	
+	if (q >= 1) {
+		newThreshold = (env.approximation.barnesHutThreshold + constants.approximation.barnesHutThreshold.max) / 2;
+	} else if (q < 0.5) {
+		newThreshold = (env.approximation.barnesHutThreshold + constants.approximation.barnesHutThreshold.min) / 2;
+	}
+	
+	if (newThreshold !== env.approximation.barnesHutThreshold) {
+		console.log('New Threshold:', newThreshold);
+		env.approximation.barnesHutThreshold = newThreshold;
 	}
 }
 
@@ -695,9 +879,7 @@ function update() {
 		step();
 	}
 	env.playback.update.end();
-	if (env.approximation.strategy === ApproximationStrategy.ProcessLimiting) {
-		adjustProcessLimit();
-	}
+	if (env.model.autoAdjust) adjustParameters();
 }
 
 function step() {
