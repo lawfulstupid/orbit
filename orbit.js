@@ -504,7 +504,8 @@ const env = {
 		gravity: 0.1, // gravitational constant
 		collision: true,
 		cullEscapees: true,
-		trailLength: 0
+		trailLength: 0,
+		autoAdjust: true
 	},
 	playback: {
 		step: new TimeUnit(),
@@ -791,7 +792,7 @@ function checkEscapees() {
 	});
 }
 
-function updateParameters() {
+function adjustParameters() {
 	switch (env.approximation.strategy) {
 		case ApproximationStrategy.ProcessLimiting:
 			adjustProcessLimit();
@@ -868,7 +869,7 @@ function update() {
 		step();
 	}
 	env.playback.update.end();
-	updateParameters();
+	if (env.model.autoAdjust) adjustParameters();
 }
 
 function step() {
