@@ -185,7 +185,7 @@ class Sphere extends Drawable {
 		
 		env.model.spheres[this.name] = this;
 		env.model.numSpheres++;
-		env.model.totalMass += this.getMass();
+		env.model.totalMass += this.mass;
 	}
 	
 	makeElement() {
@@ -231,12 +231,12 @@ class Sphere extends Drawable {
 		env.model.numSpheres--;
 	}
 	
-	getMass() {
+	get mass() {
 		return this.radius ** 3;
 	}
 	
 	getWeightedPosition() {
-		return vecMul(this.getMass(), this.position);
+		return vecMul(this.mass, this.position);
 	}
 	
 	getCornerCoords() {
@@ -488,11 +488,11 @@ function updateAcceleration(subject, object, mutual = true) {
 	const baseVec = vecMul(env.model.gravity / (norm(dir) ** 3), dir);
 	
 	if (mutual) {
-		const acc1 = vecMul(object.getMass(), baseVec);
+		const acc1 = vecMul(object.mass, baseVec);
 		subject.acceleration = vecAdd(subject.acceleration, acc1);
 	}
 	
-	const acc2 = vecMul(-subject.getMass(), baseVec);
+	const acc2 = vecMul(-subject.mass, baseVec);
 	object.acceleration = vecAdd(object.acceleration, acc2);
 }
 
@@ -564,14 +564,14 @@ function combine(a, b) {
 		return combine(b, a);
 	}
 	
-	let color = blend(a.color, b.color, a.getMass(), b.getMass());
+	let color = blend(a.color, b.color, a.mass, b.mass);
 	color = blend(color, Color.yellow, env.model.numSpheres, 1);
-	const x = weightedAverage(a.position[0], b.position[0], a.getMass(), b.getMass());
-	const y = weightedAverage(a.position[1], b.position[1], a.getMass(), b.getMass());
-	const u = weightedAverage(a.velocity[0], b.velocity[0], a.getMass(), b.getMass());
-	const v = weightedAverage(a.velocity[1], b.velocity[1], a.getMass(), b.getMass());
+	const x = weightedAverage(a.position[0], b.position[0], a.mass, b.mass);
+	const y = weightedAverage(a.position[1], b.position[1], a.mass, b.mass);
+	const u = weightedAverage(a.velocity[0], b.velocity[0], a.mass, b.mass);
+	const v = weightedAverage(a.velocity[1], b.velocity[1], a.mass, b.mass);
 	
-	a.radius = Math.cbrt(a.getMass() + b.getMass()); // grow by volume
+	a.radius = Math.cbrt(a.mass + b.mass); // grow by volume
 	a.color = color;
 	a.position = [x,y];
 	a.velocity = [u,v];
@@ -594,7 +594,7 @@ function checkEscapees() {
 	
 	forEachSphere(sphere => {
 		if (sphere.element) return; // only remove if off-screen
-		const centralMass = totalMass - sphere.getMass();
+		const centralMass = totalMass - sphere.mass;
 		const centralPos = vecMul(1/centralMass, vecSub(totalPos, sphere.getWeightedPosition()));
 		const d = dist(centralPos, sphere.position);
 		const escapeVelocity = Math.sqrt(2 * env.model.gravity * centralMass / d);
