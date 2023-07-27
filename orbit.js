@@ -279,6 +279,68 @@ class Sphere extends Drawable {
 	}
 }
 
+class QuadTree {
+	size;
+	totalMass;
+	totalWeightedPosition;
+	quadrants;
+	
+	constructor(spheres, left, top, size) {
+		this.size = size;
+		if (spheres.length <= 1) {
+			totalMass = totalMass(spheres);
+			totalWeightedPosition = totalMass(spheres);
+		} else {
+			const midSize = Math.floor(size/2);
+			const xMid = left + midSize;
+			const yMid = top + midSize;
+			
+			const northWest = [];
+			const northEast = [];
+			const southWest = [];
+			const southEast = [];
+			
+			spheres.forEach(sphere => {
+				if (sphere.position[0] <= xMid) { // west
+					if (sphere.position[1] <= yMid) { // north
+						southWest.push(sphere);
+					} else { // south
+						northWest.push(sphere);
+					}
+				} else { // east
+					if (sphere.position[1] <= yMid) { // north
+						southEast.push(sphere);
+					} else { // south
+						northEast.push(sphere);
+					}
+				}
+			});
+			
+			quadrants = [
+				new QuadTree(northWest, left, top, midSize),
+				new QuadTree(northEast, xMid, top, midSize),
+				new QuadTree(southWest, left, yMid, midSize),
+				new QuadTree(southEast, xMid, yMid, midSize)
+			];
+			
+			this.totalMass = totalMass(quadrants);
+			this.totalWeightedPosition = totalWeightedPosition(quadrants);
+		}
+	}
+	
+	get mass() {
+		return this.totalMass;
+	}
+	
+	get position() {
+		return vecMul(1/this.totalMass, this.totalWeightedPosition);
+	}
+	
+	isTerminal() {
+		return this.quadrants === undefined;
+	}
+}
+
 class TrailMarker extends Drawable {
 	static SIZE = 2;
 	sphere;
@@ -363,7 +425,8 @@ class TimeUnit {
 
 const ApproximationStrategy = {
 	None: 'none',
-	ProcessLimiting: 'processLimit'
+	ProcessLimiting: 'processLimit',
+	QuadTree: 'quadTree'
 }
 
 /*
@@ -377,6 +440,11 @@ const ApproximationStrategy = {
  * this is used to limit how many pairs of spheres will have their forces calculated
  * e.g. if processLimit = 100, that would mean a limit of 4950 comparisons.
  * Complexity: O(processLimit^2)
+ *
+ * QuadTree:
+ * Implementation of the Barnes-Hut algorithm,
+ * using env.approximation.quadrantThreshold as the theta-value.
+ * Complexity: O(N log N)
  */
 
 const constants = {
@@ -385,6 +453,11 @@ const constants = {
 			min: () => Math.floor(2 * Math.sqrt(env.model.numSpheres)),
 			max: () => env.model.numSpheres,
 			factor: 1.5
+		},
+		quadrantThreshold: {
+			min: 0,
+			max: 2,
+			factor: 2
 		}
 	},
 	playback: {
@@ -428,7 +501,8 @@ const env = {
 	},
 	approximation: {
 		strategy: ApproximationStrategy.ProcessLimiting,
-		processLimit: 1000
+		processLimit: 1000,
+		quadrantThreshold: 1
 	}
 }
 
