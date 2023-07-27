@@ -158,7 +158,6 @@ class Drawable {
 			this.element = undefined;
 		}
 	}
-	
 }
 
 class Sphere extends Drawable {
@@ -278,11 +277,9 @@ class Sphere extends Drawable {
 			}
 		});
 	}
-	
 }
 
 class TrailMarker extends Drawable {
-	
 	static SIZE = 2;
 	sphere;
 	birthStep = env.playback.step.index;
@@ -309,7 +306,6 @@ class TrailMarker extends Drawable {
 	getElementHeight() {
 		return TrailMarker.SIZE;
 	}
-	
 }
 
 class TimeUnit {
@@ -450,6 +446,14 @@ function getFocus() {
 	} else {
 		return null;
 	}
+}
+
+function totalMass(spheres = []) {
+	return spheres.map(sphere => sphere.mass).reduce((a,b) => a+b, 0)
+}
+
+function totalWeightedPosition(spheres = []) {
+	return spheres.map(sphere => sphere.getWeightedPosition()).reduce(vecAdd, [0,0])
 }
 
 
