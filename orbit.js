@@ -640,25 +640,35 @@ function updateAccelerationsQuadTree() {
 }
 
 function traverseTree(sphere, treeNode) {
-	const distanceQuotient = treeNode.size / dist(sphere.position, treeNode.position);
-	let action;
+	if (treeNode.isEmpty()) return;
 	
-	if (treeNode.isEmpty()) {
-		action = 'pass';
-	} else if (treeNode.isTerminal()) {
-		if (treeNode.contains(sphere)) {
-			action = 'pass';
-		} else {
-			action = 'resolve';
-		}
-	} else if (distanceQuotient < env.approximation.barnesHutThreshold) {
-		if (treeNode.contains(sphere)) {
-			action = 'expand';
-		} else {
-			action = 'resolve';
-		}
-	} else {
+	/*
+	FAR vs NEAR: whether the treeNode passes the threshold test
+	TERM(INAL) vs NT (NONTERMINAL)
+	IN(SIDE) vs OUT(SIDE): if the treeNode contains the sphere or not
+	
+	FAR  + NT   + IN  = resolve    // I thought this should be expand but resolve works better
+	FAR  + NT   + OUT = resolve
+	FAR  + TERM + IN  = impossible // won't happen so allow any action
+	FAR  + TERM + OUT = resolve
+	NEAR + NT   + IN  = expand
+	NEAR + NT   + OUT = expand
+	NEAR + TERM + IN  = pass
+	NEAR + TERM + OUT = resolve
+	*/
+	
+	const distanceQuotient = treeNode.size / dist(sphere.position, treeNode.position);
+	const sufficientlyFar = distanceQuotient < env.approximation.barnesHutThreshold;
+	
+	let action;
+	if (sufficientlyFar) {
+		action = 'resolve';
+	} else if (!treeNode.isTerminal()) {
 		action = 'expand';
+	} else if (treeNode.contains(sphere)) {
+		action = 'pass';
+	} else {
+		action = 'resolve';
 	}
 	
 	if (action === 'resolve') {
@@ -668,7 +678,7 @@ function traverseTree(sphere, treeNode) {
 			traverseTree(sphere, quad);
 		});
 	}
-	// Do nothing if action === 'pass'
+	// do nothing if action === 'pass'
 }
 
 // Generally assumes subject is bigger than object (relevant if mutual = false)
