@@ -280,18 +280,22 @@ class Sphere extends Drawable {
 }
 
 class QuadTree {
+	left;
+	top;
 	size;
 	totalMass;
 	totalWeightedPosition;
 	quadrants;
 	
 	constructor(spheres, left, top, size) {
+		this.left = left;
+		this.top = top;
 		this.size = size;
-		if (spheres.length <= 6) {
+		if (spheres.length <= 1) {
 			this.totalMass = totalMass(spheres);
 			this.totalWeightedPosition = totalWeightedPosition(spheres);
 		} else {
-			const midSize = Math.floor(size/2);
+			const midSize = size/2;
 			const xMid = left + midSize;
 			const yMid = top + midSize;
 			
@@ -333,7 +337,11 @@ class QuadTree {
 	}
 	
 	get position() {
-		return vecMul(1/this.totalMass, this.totalWeightedPosition);
+		if (this.isEmpty()) {
+			return [0,0];
+		} else {
+			return vecMul(1/this.totalMass, this.totalWeightedPosition);
+		}
 	}
 	
 	getWeightedPosition() {
@@ -342,6 +350,17 @@ class QuadTree {
 	
 	isTerminal() {
 		return this.quadrants === undefined;
+	}
+	
+	isEmpty() {
+		return this.totalMass === 0;
+	}
+	
+	contains(sphere) {
+		const right = this.left + this.size;
+		const bottom = this.top + this.size;
+		const [x,y] = sphere.position;
+		return this.left <= x && x <= right && this.top <= y && y <= bottom;
 	}
 }
 
@@ -447,7 +466,7 @@ const ApproximationStrategy = {
  *
  * QuadTree:
  * Implementation of the Barnes-Hut algorithm,
- * using env.approximation.quadrantThreshold as the theta-value.
+ * using env.approximation.barnesHutThreshold as the theta-value.
  * Complexity: O(N log N)
  */
 
@@ -458,7 +477,7 @@ const constants = {
 			max: () => env.model.numSpheres,
 			factor: 1.5
 		},
-		quadrantThreshold: {
+		barnesHutThreshold: {
 			min: 0,
 			max: 2,
 			factor: 2
@@ -506,7 +525,7 @@ const env = {
 	approximation: {
 		strategy: ApproximationStrategy.QuadTree,
 		processLimit: 1000,
-		quadrantThreshold: 1
+		barnesHutThreshold: 0.5
 	}
 }
 
@@ -614,7 +633,42 @@ function updateAccelerationsQuadTree() {
 	maxDist += 1; // to combat off-by-one errors
 	
 	const tree = new QuadTree(Object.values(env.model.spheres), -maxDist, -maxDist, 2*maxDist);
-	console.log(tree);
+	
+	forEachSphere(sphere => {
+		traverseTree(sphere, tree);
+	});
+}
+
+function traverseTree(sphere, treeNode) {
+	const distanceQuotient = treeNode.size / dist(sphere.position, treeNode.position);
+	let action;
+	
+	if (treeNode.isEmpty()) {
+		action = 'pass';
+	} else if (treeNode.isTerminal()) {
+		if (treeNode.contains(sphere)) {
+			action = 'pass';
+		} else {
+			action = 'resolve';
+		}
+	} else if (distanceQuotient < env.approximation.barnesHutThreshold) {
+		if (treeNode.contains(sphere)) {
+			action = 'expand';
+		} else {
+			action = 'resolve';
+		}
+	} else {
+		action = 'expand';
+	}
+	
+	if (action === 'resolve') {
+		updateAcceleration(treeNode, sphere, false);
+	} else if (action === 'expand') {
+		treeNode.quadrants.forEach(quad => {
+			traverseTree(sphere, quad);
+		});
+	}
+	// Do nothing if action === 'pass'
 }
 
 // Generally assumes subject is bigger than object (relevant if mutual = false)
