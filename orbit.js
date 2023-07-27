@@ -235,6 +235,10 @@ class Sphere extends Drawable {
 		return this.radius ** 3;
 	}
 	
+	set mass(newMass) {
+		this.radius = Math.cbrt(newMass);
+	}
+	
 	getWeightedPosition() {
 		return vecMul(this.mass, this.position);
 	}
@@ -571,7 +575,7 @@ function combine(a, b) {
 	const u = weightedAverage(a.velocity[0], b.velocity[0], a.mass, b.mass);
 	const v = weightedAverage(a.velocity[1], b.velocity[1], a.mass, b.mass);
 	
-	a.radius = Math.cbrt(a.mass + b.mass); // grow by volume
+	a.mass += b.mass; // grow by volume
 	a.color = color;
 	a.position = [x,y];
 	a.velocity = [u,v];
