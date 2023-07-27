@@ -287,9 +287,9 @@ class QuadTree {
 	
 	constructor(spheres, left, top, size) {
 		this.size = size;
-		if (spheres.length <= 1) {
-			totalMass = totalMass(spheres);
-			totalWeightedPosition = totalMass(spheres);
+		if (spheres.length <= 6) {
+			this.totalMass = totalMass(spheres);
+			this.totalWeightedPosition = totalWeightedPosition(spheres);
 		} else {
 			const midSize = Math.floor(size/2);
 			const xMid = left + midSize;
@@ -303,28 +303,28 @@ class QuadTree {
 			spheres.forEach(sphere => {
 				if (sphere.position[0] <= xMid) { // west
 					if (sphere.position[1] <= yMid) { // north
-						southWest.push(sphere);
-					} else { // south
 						northWest.push(sphere);
+					} else { // south
+						southWest.push(sphere);
 					}
 				} else { // east
 					if (sphere.position[1] <= yMid) { // north
-						southEast.push(sphere);
-					} else { // south
 						northEast.push(sphere);
+					} else { // south
+						southEast.push(sphere);
 					}
 				}
 			});
 			
-			quadrants = [
+			this.quadrants = [
 				new QuadTree(northWest, left, top, midSize),
 				new QuadTree(northEast, xMid, top, midSize),
 				new QuadTree(southWest, left, yMid, midSize),
 				new QuadTree(southEast, xMid, yMid, midSize)
 			];
 			
-			this.totalMass = totalMass(quadrants);
-			this.totalWeightedPosition = totalWeightedPosition(quadrants);
+			this.totalMass = totalMass(this.quadrants);
+			this.totalWeightedPosition = totalWeightedPosition(this.quadrants);
 		}
 	}
 	
@@ -334,6 +334,10 @@ class QuadTree {
 	
 	get position() {
 		return vecMul(1/this.totalMass, this.totalWeightedPosition);
+	}
+	
+	getWeightedPosition() {
+		return this.totalWeightedPosition;
 	}
 	
 	isTerminal() {
@@ -500,7 +504,7 @@ const env = {
 		scale: constants.screen.scale.default // >1 => zoomed in1, <1 => zoomed out
 	},
 	approximation: {
-		strategy: ApproximationStrategy.ProcessLimiting,
+		strategy: ApproximationStrategy.QuadTree,
 		processLimit: 1000,
 		quadrantThreshold: 1
 	}
@@ -577,6 +581,9 @@ function updateAccelerations() {
 		case ApproximationStrategy.ProcessLimit:
 			updateAccelerationsProcessLimited();
 			break;
+		case ApproximationStrategy.QuadTree:
+			updateAccelerationsQuadTree();
+			break;
 	}
 }
 
@@ -596,6 +603,18 @@ function updateAccelerationsProcessLimited() {
 			updateAcceleration(subject, object);
 		}
 	}
+}
+
+function updateAccelerationsQuadTree() {
+	let maxDist = 0;
+	forEachSphere(sphere => {
+		sphere.acceleration = [0,0];
+		maxDist = Math.ceil(Math.max(maxDist, Math.abs(sphere.position[0]), Math.abs(sphere.position[1])));
+	});
+	maxDist += 1; // to combat off-by-one errors
+	
+	const tree = new QuadTree(Object.values(env.model.spheres), -maxDist, -maxDist, 2*maxDist);
+	console.log(tree);
 }
 
 // Generally assumes subject is bigger than object (relevant if mutual = false)
