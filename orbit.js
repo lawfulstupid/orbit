@@ -365,8 +365,26 @@ class TimeUnit {
 	}
 }
 
+const ApproximationStrategy = {
+	None: 'none',
+	ProcessLimiting: 'processLimit'
+}
+
+/*
+ * None:
+ * When no approximation strategy is employed, forces between all pairs of 
+ * spheres is computed.
+ * Complexity: O(N^2)
+ *
+ * Process Limiting:
+ * `processLimit` represents how many spheres the system could comfortably handle
+ * this is used to limit how many pairs of spheres will have their forces calculated
+ * e.g. if processLimit = 100, that would mean a limit of 4950 comparisons.
+ * Complexity: O(processLimit^2)
+ */
+
 const constants = {
-	model: {
+	approximation: {
 		processLimit: {
 			min: () => Math.floor(2 * Math.sqrt(env.model.numSpheres)),
 			max: () => env.model.numSpheres,
@@ -395,11 +413,7 @@ const env = {
 		gravity: 0.1, // gravitational constant
 		collision: true,
 		cullEscapees: true,
-		trailLength: 0,
-		processLimit: 1000
-		// processLimit represents how many spheres the system could comfortably handle
-		// this is used to limit how many pairs of spheres will have their forces calculated
-		// processLimit is also dynamically changed based on FPS
+		trailLength: 0
 	},
 	playback: {
 		step: new TimeUnit(),
@@ -415,6 +429,10 @@ const env = {
 	screen: {
 		centre: [0, 0],
 		scale: constants.screen.scale.default // >1 => zoomed in1, <1 => zoomed out
+	},
+	approximation: {
+		strategy: ApproximationStrategy.ProcessLimiting,
+		processLimit: 1000
 	}
 }
 
@@ -473,8 +491,20 @@ function binByLocation(binWidth, processor) {
 }
 
 function updateAccelerations() {
+	switch (env.approximation.strategy) {
+		case ApproximationStrategy.None:
+			env.approximation.processLimit = env.model.numSpheres;
+			updateAccelerationsProcessLimited();
+			break;
+		case ApproximationStrategy.ProcessLimit:
+			updateAccelerationsProcessLimited();
+			break;
+	}
+}
+
+function updateAccelerationsProcessLimited() {
 	const list = Object.values(env.model.spheres).sort(sortOn(s => -s.radius + Math.random())); // add a small (0-1) random number to mix things up
-	const pairsLimit = numPairs(env.model.processLimit);
+	const pairsLimit = numPairs(env.approximation.processLimit);
 	const bound = revNumPairs(list.length, pairsLimit);
 	
 	for (let subjectIdx = 0; subjectIdx < bound; subjectIdx++) {
@@ -485,7 +515,7 @@ function updateAccelerations() {
 			const object = list[objectIdx];
 			if (subjectIdx === 0) object.acceleration = [0,0]; // reset acceleration on first pass
 			
-			updateAcceleration(subject, object, false);
+			updateAcceleration(subject, object);
 		}
 	}
 }
@@ -613,17 +643,17 @@ function checkEscapees() {
 
 function adjustProcessLimit() {
 	const q = env.playback.update.lastDuration / (1000 / 60);
-	let newLimit = env.model.processLimit;
+	let newLimit = env.approximation.processLimit;
 	
 	if (q >= 1) {
-		newLimit = Math.max(constants.model.processLimit.min(), Math.floor(env.model.processLimit / constants.model.processLimit.factor));
+		newLimit = Math.max(constants.approximation.processLimit.min(), Math.floor(env.approximation.processLimit / constants.approximation.processLimit.factor));
 	} else if (q < 0.5) {
-		newLimit = Math.min(constants.model.processLimit.max(), Math.floor(env.model.processLimit * constants.model.processLimit.factor));
+		newLimit = Math.min(constants.approximation.processLimit.max(), Math.floor(env.approximation.processLimit * constants.approximation.processLimit.factor));
 	}
 	
-	if (newLimit !== env.model.processLimit) {
+	if (newLimit !== env.approximation.processLimit) {
 		console.log('New Process Limit:', newLimit);
-		env.model.processLimit = newLimit;
+		env.approximation.processLimit = newLimit;
 	}
 }
 
@@ -661,7 +691,9 @@ function update() {
 		step();
 	}
 	env.playback.update.end();
-	adjustProcessLimit();
+	if (env.approximation.strategy === ApproximationStrategy.ProcessLimiting) {
+		adjustProcessLimit();
+	}
 }
 
 function step() {
