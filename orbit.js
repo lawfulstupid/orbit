@@ -479,8 +479,7 @@ const constants = {
 		},
 		barnesHutThreshold: {
 			min: 0,
-			max: 2,
-			factor: 2
+			max: 2
 		}
 	},
 	playback: {
@@ -792,6 +791,17 @@ function checkEscapees() {
 	});
 }
 
+function updateParameters() {
+	switch (env.approximation.strategy) {
+		case ApproximationStrategy.ProcessLimiting:
+			adjustProcessLimit();
+			break;
+		case ApproximationStrategy.QuadTree:
+			adjustBarnesHutThreshold();
+			break;
+	}
+}
+
 function adjustProcessLimit() {
 	const q = env.playback.update.lastDuration / (1000 / 60);
 	let newLimit = env.approximation.processLimit;
@@ -805,6 +815,22 @@ function adjustProcessLimit() {
 	if (newLimit !== env.approximation.processLimit) {
 		console.log('New Process Limit:', newLimit);
 		env.approximation.processLimit = newLimit;
+	}
+}
+
+function adjustBarnesHutThreshold() {
+	const q = env.playback.update.lastDuration / (1000 / 60);
+	let newThreshold = env.approximation.barnesHutThreshold;
+	
+	if (q >= 1) {
+		newThreshold = (env.approximation.barnesHutThreshold + constants.approximation.barnesHutThreshold.max) / 2;
+	} else if (q < 0.5) {
+		newThreshold = (env.approximation.barnesHutThreshold + constants.approximation.barnesHutThreshold.min) / 2;
+	}
+	
+	if (newThreshold !== env.approximation.barnesHutThreshold) {
+		console.log('New Threshold:', newThreshold);
+		env.approximation.barnesHutThreshold = newThreshold;
 	}
 }
 
@@ -842,9 +868,7 @@ function update() {
 		step();
 	}
 	env.playback.update.end();
-	if (env.approximation.strategy === ApproximationStrategy.ProcessLimiting) {
-		adjustProcessLimit();
-	}
+	updateParameters();
 }
 
 function step() {
