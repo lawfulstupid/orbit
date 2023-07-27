@@ -243,6 +243,10 @@ class Sphere extends Drawable {
 		return vecMul(this.mass, this.position);
 	}
 	
+	getWeightedVelocity() {
+		return vecMul(this.mass, this.velocity);
+	}
+	
 	getCornerCoords() {
 		const radArr = vecMul(env.screen.scale, [this.radius, this.radius]);
 		return vecSub(super.getCornerCoords(), radArr);
@@ -570,15 +574,13 @@ function combine(a, b) {
 	
 	let color = blend(a.color, b.color, a.mass, b.mass);
 	color = blend(color, Color.yellow, env.model.numSpheres, 1);
-	const x = weightedAverage(a.position[0], b.position[0], a.mass, b.mass);
-	const y = weightedAverage(a.position[1], b.position[1], a.mass, b.mass);
-	const u = weightedAverage(a.velocity[0], b.velocity[0], a.mass, b.mass);
-	const v = weightedAverage(a.velocity[1], b.velocity[1], a.mass, b.mass);
+	const weightedPosition = vecAdd(a.getWeightedPosition(), b.getWeightedPosition());
+	const weightedVelocity = vecAdd(a.getWeightedVelocity(), b.getWeightedVelocity());
 	
 	a.mass += b.mass; // grow by volume
 	a.color = color;
-	a.position = [x,y];
-	a.velocity = [u,v];
+	a.position = vecMul(1/a.mass, weightedPosition);
+	a.velocity = vecMul(1/a.mass, weightedVelocity);
 	a.trail.push(...b.trail); // combine trails
 	
 	b.successor = a;
