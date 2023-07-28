@@ -288,6 +288,12 @@ class QuadTree {
 	quadrants;
 	
 	constructor(spheres, left, top, size) {
+		if (left === undefined) {
+			left = -QuadTree.getMaxDist(spheres);
+			top = left;
+			size = -2 * left;
+		}
+		
 		this.left = left;
 		this.top = top;
 		this.size = size;
@@ -330,6 +336,13 @@ class QuadTree {
 			this.totalMass = totalMass(this.quadrants);
 			this.totalWeightedPosition = totalWeightedPosition(this.quadrants);
 		}
+	}
+	
+	static getMaxDist(spheres) {
+		const maxDist = spheres.reduce((md,sphere) => {
+			return Math.max(md, Math.abs(sphere.position[0]), Math.abs(sphere.position[1]));
+		}, 0);
+		return Math.ceil(maxDist) + 1; // to combat off-by-one errors
 	}
 	
 	get mass() {
@@ -625,16 +638,10 @@ function updateAccelerationsProcessLimited() {
 }
 
 function updateAccelerationsQuadTree() {
-	let maxDist = 0;
+	const tree = new QuadTree(Object.values(env.model.spheres));
+	
 	forEachSphere(sphere => {
 		sphere.acceleration = [0,0];
-		maxDist = Math.ceil(Math.max(maxDist, Math.abs(sphere.position[0]), Math.abs(sphere.position[1])));
-	});
-	maxDist += 1; // to combat off-by-one errors
-	
-	const tree = new QuadTree(Object.values(env.model.spheres), -maxDist, -maxDist, 2*maxDist);
-	
-	forEachSphere(sphere => {
 		traverseTree(sphere, tree);
 	});
 }
