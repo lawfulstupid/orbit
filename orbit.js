@@ -805,6 +805,8 @@ function checkEscapees() {
 		if (norm(sphere.velocity) > 2 * escapeVelocity) {
 			sphere.remove();
 			env.model.totalMass = centralMass;
+			// Append trail to something else so it gets cleaned up
+			getAutoFocusTarget().trail.push(...sphere.trail);
 		}
 	});
 }
