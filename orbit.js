@@ -570,8 +570,8 @@ function totalWeightedPosition(spheres = []) {
 /* BUSINESS LOGIC */
 
 function forEachSphere(fn) {
-	for (const sphere of Object.values(env.model.spheres)) {
-		fn(sphere);
+	for (const key in env.model.spheres) {
+		fn(env.model.spheres[key]);
 	}
 }
 
